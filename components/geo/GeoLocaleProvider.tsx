@@ -47,7 +47,7 @@ export function GeoLocaleProvider({ children, initialLocale, initialBundle }: {
     const current = ++sequence.current
     setState(s => ({ ...s, status: 'loading' }))
     try {
-      const response = await fetch(`/api/locale?lang=${encodeURIComponent(lang)}`, { cache: 'no-store' })
+      const response = await fetch(`/api/locale?lang=${encodeURIComponent(lang)}`, { cache: 'no-store', signal: AbortSignal.timeout(45000) })
       if (!response.ok) throw new Error('Locale unavailable')
       const { bundle } = await response.json() as { bundle: LocaleBundle }
       if (current === sequence.current) setState(s => ({ ...s, lang: bundle.lang, bundle, status: 'ready' }))
@@ -57,17 +57,23 @@ export function GeoLocaleProvider({ children, initialLocale, initialBundle }: {
   }, [])
 
   useEffect(() => {
+    let lang = initialLocale?.lang ?? 'en'
     // Never overwrite accurate network geolocation with the device's timezone.
-    if (initialLocale?.countryDetected) return
-    const preferences = [...navigator.languages]
-    const countryCode = countryFromLanguageTags(preferences)
-      ?? countryFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
-    if (!countryCode) return
-    const locale = localeForCountry(countryCode, preferences)
-    const hasLanguageOverride = document.cookie.split('; ').some(cookie => cookie.startsWith(`${OVERRIDE_KEY}=`))
-    const hasCurrencyOverride = document.cookie.split('; ').some(cookie => cookie.startsWith('ff_locale_currency='))
-    setState(s => ({ ...s, countryCode, currency: hasCurrencyOverride ? s.currency : locale.currency }))
-    if (!hasLanguageOverride && locale.lang !== initialLocale?.lang) void loadLanguage(locale.lang)
+    if (!initialLocale?.countryDetected) {
+      const preferences = [...navigator.languages]
+      const countryCode = countryFromLanguageTags(preferences)
+        ?? countryFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+      if (countryCode) {
+        const locale = localeForCountry(countryCode, preferences)
+        const hasLanguageOverride = document.cookie.split('; ').some(cookie => cookie.startsWith(`${OVERRIDE_KEY}=`))
+        const hasCurrencyOverride = document.cookie.split('; ').some(cookie => cookie.startsWith('ff_locale_currency='))
+        setState(s => ({ ...s, countryCode, currency: hasCurrencyOverride ? s.currency : locale.currency }))
+        if (!hasLanguageOverride) lang = locale.lang
+      }
+    }
+    // Refresh missing translations and rates after hydration, independently of
+    // the document response. Cached languages still render on the first paint.
+    void loadLanguage(lang)
   }, [initialLocale?.countryDetected, initialLocale?.lang, loadLanguage])
 
   const setLang = useCallback((lang: Lang) => {

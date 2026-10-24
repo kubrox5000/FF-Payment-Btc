@@ -8,6 +8,7 @@ import { POLICY_CONTENT } from './policies'
 import { CURRENCIES, isSupportedLang, LANGUAGES } from './currencies'
 import type { LocaleBundle } from './locale-bundle'
 import { validateTranslations } from './translation-validation'
+import { withDeadline } from './with-deadline'
 
 function sourceMessages() {
   const messages: Record<string, string> = { ...dictionaries.en }
@@ -24,7 +25,7 @@ function sourceMessages() {
   return messages
 }
 
-export const getTranslatedMessages = cache(async (requestedLang: string) => {
+export const getTranslatedMessages = cache(async (requestedLang: string, cachedOnly = false) => {
   const lang = isSupportedLang(requestedLang) ? requestedLang : 'en'
   if (dictionaries[lang]) return { lang, messages: dictionaries[lang], texts: {} }
   const source = sourceMessages()
@@ -32,11 +33,15 @@ export const getTranslatedMessages = cache(async (requestedLang: string) => {
   const key = `translations-v1/${version}/${lang}`
   try {
     const store = getStore('locale-cache')
-    const saved = await store.get(key, { type: 'json' }) as Record<string, string> | null
+    const read = store.get(key, { type: 'json' }) as Promise<Record<string, string> | null>
+    const saved = cachedOnly ? await withDeadline(read, 500, null) : await read
     let messages: Record<string, string>
     if (saved && validateTranslations(source, saved)) {
       messages = saved
     } else {
+      // Document rendering must never generate translations. The browser's
+      // locale request fills this cache after the initial HTML is delivered.
+      if (cachedOnly) return { lang: 'en', messages: dictionaries.en, texts: {} }
       // Only the site's fixed public copy is sent to AI Gateway. No visitor,
       // order, payment, or account information is included in translation.
       const client = new OpenAI({ timeout: 25000, maxRetries: 0 })
@@ -68,13 +73,15 @@ export const getTranslatedMessages = cache(async (requestedLang: string) => {
   }
 })
 
-export const getExchangeRates = cache(async (): Promise<Record<string, number>> => {
+export const getExchangeRates = cache(async (cachedOnly = false): Promise<Record<string, number>> => {
   const fallback = Object.fromEntries(Object.entries(CURRENCIES).map(([code, info]) => [code, info.rate]))
   type RateSnapshot = { fetchedAt: number; rates: Record<string, number> }
   let saved: RateSnapshot | null = null
   try {
     const store = getStore('locale-cache')
-    saved = await store.get('usd-exchange-rates', { type: 'json' }) as RateSnapshot | null
+    const read = store.get('usd-exchange-rates', { type: 'json' }) as Promise<RateSnapshot | null>
+    saved = cachedOnly ? await withDeadline(read, 500, null) : await read
+    if (cachedOnly) return saved?.rates ?? fallback
     if (saved && Date.now() - saved.fetchedAt < 12 * 60 * 60 * 1000) return saved.rates
     const response = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(6000) })
     if (!response.ok) throw new Error('Exchange rates unavailable')
@@ -88,7 +95,7 @@ export const getExchangeRates = cache(async (): Promise<Record<string, number>> 
   }
 })
 
-export const getLocaleBundle = cache(async (lang: string): Promise<LocaleBundle> => {
-  const [translation, rates] = await Promise.all([getTranslatedMessages(lang), getExchangeRates()])
+export const getLocaleBundle = cache(async (lang: string, cachedOnly = false): Promise<LocaleBundle> => {
+  const [translation, rates] = await Promise.all([getTranslatedMessages(lang, cachedOnly), getExchangeRates(cachedOnly)])
   return { ...translation, rates }
 })

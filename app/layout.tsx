@@ -63,7 +63,7 @@ export default async function RootLayout({
     resolveServerLocale(),
     getSettings(),
   ]);
-  const initialBundle = await getLocaleBundle(initialLocale.lang);
+  const initialBundle = await getLocaleBundle(initialLocale.lang, true);
   const brandScript = `window.__FF_BRAND__=${JSON.stringify({ siteName: settings.siteName ?? '', logo: settings.logo ?? '' })};`
   return (
     <html lang={initialBundle.lang} dir={dirOf(initialBundle.lang)} className="dark" suppressHydrationWarning>

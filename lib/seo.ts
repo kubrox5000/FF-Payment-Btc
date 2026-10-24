@@ -51,7 +51,7 @@ const ogLocale: Record<Lang, string> = {
  */
 export async function localizedPageMetadata(pageKey: PageTitleKey): Promise<Metadata> {
   const locale = await resolveServerLocale()
-  const translation = await getTranslatedMessages(locale.lang)
+  const translation = await getTranslatedMessages(locale.lang, true)
   const fullTitle = t(translation.lang, pageKey as TKey, undefined, translation.messages)
   const title = fullTitle ? `${fullTitle} — FF Diamond` : 'FF Diamond'
   const description = t(translation.lang, (pageKey.replace('title_', 'desc_')) as TKey, undefined, translation.messages)
