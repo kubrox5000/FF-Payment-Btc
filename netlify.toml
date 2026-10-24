@@ -1,0 +1,6 @@
+[build]
+  command = "pnpm run build"
+  publish = ".next"
+
+# Netlify automatically applies its Next.js adapter to serve pages, API routes,
+# middleware, and static assets from this build.

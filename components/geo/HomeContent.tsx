@@ -38,7 +38,8 @@ PkgLink.displayName = 'PkgLink'
 
 export function HomeContent({ pkgs, reviews, totalReviews, averageRating, freeGift }: Props) {
   const { t } = useLocale()
-  const popular = useMemo(() => pkgs.filter((p) => p.popular || p.flashSale), [pkgs])
+  const sortedPackages = useMemo(() => [...pkgs].sort((a, b) => a.diamonds - b.diamonds), [pkgs])
+  const popular = useMemo(() => sortedPackages.filter((p) => p.popular || p.flashSale), [sortedPackages])
 
   const whyUs = useMemo(() => [
     { icon: Rocket,        iconClass: 'text-rose-400',   num: '01', title: t('why1_t'), desc: t('why1_d') },
@@ -63,7 +64,7 @@ export function HomeContent({ pkgs, reviews, totalReviews, averageRating, freeGi
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-          {pkgs.map((p) => (
+          {sortedPackages.map((p) => (
             <PkgLink key={p.id} p={p} freeGift={freeGift} />
           ))}
         </div>

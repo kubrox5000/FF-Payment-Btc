@@ -1,6 +1,16 @@
 // Client-safe country/locale/currency resolution.
 
-export type Lang = 'en' | 'ar' | 'fr' | 'es'
+import geography from './country-locales.json'
+
+export type Lang = string
+export const LANGUAGES: Record<string, { name: string; label: string }> = geography.languages
+export const CURRENCY_OPTIONS: Record<string, { name: string; symbol: string }> = geography.currencies
+export function isSupportedLang(lang: string): boolean {
+  return Object.hasOwn(LANGUAGES, lang)
+}
+export function isSupportedCurrency(currency: string): boolean {
+  return Object.hasOwn(CURRENCY_OPTIONS, currency)
+}
 export type Dir = 'ltr' | 'rtl'
 
 export interface CurrencyInfo {
@@ -16,7 +26,7 @@ export interface LocaleConfig {
   currency: string
 }
 
-export const dirOf = (lang: Lang): Dir => (lang === 'ar' ? 'rtl' : 'ltr')
+export const dirOf = (lang: Lang): Dir => (['ar', 'ur', 'fa', 'he', 'ps', 'dv', 'yi'].includes(lang) ? 'rtl' : 'ltr')
 
 // Fixed, editable conversion rates (USD → local). Prices shown to the visitor
 // are computed as `priceUsd × rate` and never alter the real USDT/USD order amount.
@@ -49,72 +59,9 @@ export const CURRENCIES: Record<string, CurrencyInfo> = {
   MYR: { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM', rate: 4.3 },
 }
 
-// Country → currency. Arabic is the official, always-on language of the site;
-// the country mapping only adjusts the display currency so prices adapt to the
-// visitor's region (SAR is the universal fallback).
-const COUNTRY_LOCALE: Record<string, LocaleConfig> = {
-  // MENA / Arabic-speaking
-  SA: { lang: 'ar', currency: 'SAR' },
-  AE: { lang: 'ar', currency: 'AED' },
-  EG: { lang: 'ar', currency: 'EGP' },
-  IQ: { lang: 'ar', currency: 'IQD' },
-  MA: { lang: 'ar', currency: 'MAD' },
-  DZ: { lang: 'ar', currency: 'DZD' },
-  TN: { lang: 'ar', currency: 'TND' },
-  JO: { lang: 'ar', currency: 'JOD' },
-  KW: { lang: 'ar', currency: 'KWD' },
-  QA: { lang: 'ar', currency: 'QAR' },
-  BH: { lang: 'ar', currency: 'BHD' },
-  OM: { lang: 'ar', currency: 'OMR' },
-  LY: { lang: 'ar', currency: 'LYD' },
-  LB: { lang: 'ar', currency: 'LBP' },
-  SY: { lang: 'ar', currency: 'USD' },
-  YE: { lang: 'ar', currency: 'USD' },
-  PS: { lang: 'ar', currency: 'USD' },
-  MR: { lang: 'ar', currency: 'USD' },
-  SO: { lang: 'ar', currency: 'USD' },
-  SD: { lang: 'ar', currency: 'USD' },
-  DJ: { lang: 'ar', currency: 'USD' },
-  // French-speaking countries
-  CM: { lang: 'fr', currency: 'USD' },
-  CI: { lang: 'fr', currency: 'USD' },
-  SN: { lang: 'fr', currency: 'USD' },
-  ML: { lang: 'fr', currency: 'USD' },
-  // Spanish-speaking countries
-  MX: { lang: 'es', currency: 'USD' },
-  CO: { lang: 'es', currency: 'USD' },
-  AR: { lang: 'es', currency: 'USD' },
-  CL: { lang: 'es', currency: 'USD' },
-  PE: { lang: 'es', currency: 'USD' },
-  VE: { lang: 'es', currency: 'USD' },
-  // Non-Arabic regions with local currency
-  US: { lang: 'en', currency: 'USD' },
-  GB: { lang: 'en', currency: 'GBP' },
-  IN: { lang: 'en', currency: 'INR' },
-  PK: { lang: 'en', currency: 'PKR' },
-  ID: { lang: 'en', currency: 'IDR' },
-  PH: { lang: 'en', currency: 'PHP' },
-  BR: { lang: 'en', currency: 'BRL' },
-  TR: { lang: 'en', currency: 'TRY' },
-  NG: { lang: 'en', currency: 'NGN' },
-  TH: { lang: 'en', currency: 'THB' },
-  MY: { lang: 'en', currency: 'MYR' },
-  DE: { lang: 'en', currency: 'EUR' },
-  FR: { lang: 'fr', currency: 'EUR' },
-  ES: { lang: 'es', currency: 'EUR' },
-  IT: { lang: 'en', currency: 'EUR' },
-  NL: { lang: 'en', currency: 'EUR' },
-  BE: { lang: 'en', currency: 'EUR' },
-  PT: { lang: 'en', currency: 'EUR' },
-  AT: { lang: 'en', currency: 'EUR' },
-  IE: { lang: 'en', currency: 'EUR' },
-  FI: { lang: 'en', currency: 'EUR' },
-  GR: { lang: 'en', currency: 'EUR' },
-  RO: { lang: 'en', currency: 'EUR' },
-  PL: { lang: 'en', currency: 'EUR' },
-}
+const COUNTRY_LOCALE: Record<string, { lang: string; languages: string[]; currency: string }> = geography.countries
 
-export const FALLBACK_LOCALE: LocaleConfig = { lang: 'ar', currency: 'SAR' }
+export const FALLBACK_LOCALE: LocaleConfig = { lang: 'en', currency: 'USD' }
 
 // Timezone → country. A fast, network-free signal for the visitor's physical
 // location (more reliable than browser language, which is often left in English).
@@ -149,15 +96,22 @@ export function countryFromTimezone(timeZone?: string): string | undefined {
   return TIMEZONE_COUNTRY[timeZone]
 }
 
-/**
- * Map an ISO country code to the visitor's locale. Arabic is the official
- * language and is always returned regardless of country; only the currency is
- * adjusted per region (SAR as the universal fallback).
- */
-export function localeForCountry(countryCode: string | undefined): LocaleConfig {
-  const code = (countryCode ?? '').trim().toUpperCase()
-  const currency = COUNTRY_LOCALE[code]?.currency ?? FALLBACK_LOCALE.currency
-  return { lang: 'ar', currency }
+/** Prefer the country's language, or a browser language used in that country. */
+export function localeForCountry(countryCode: string | undefined, preferredLanguages: string[] = []): LocaleConfig {
+  const country = COUNTRY_LOCALE[(countryCode ?? '').trim().toUpperCase()]
+  if (!country) return { ...FALLBACK_LOCALE }
+  const preferred = preferredLanguages.map(tag => tag.toLowerCase().split('-')[0])
+  return { lang: preferred.find(lang => country.languages.includes(lang)) ?? country.lang, currency: country.currency }
+}
+
+export function countryFromLanguageTags(tags: string[]): string | undefined {
+  for (const tag of tags) {
+    try {
+      const region = new Intl.Locale(tag).region
+      if (region && COUNTRY_LOCALE[region]) return region
+    } catch { /* Skip invalid browser language tags. */ }
+  }
+  return undefined
 }
 
 /** A "generic" interface used by the provider before a final decision. */
@@ -173,12 +127,9 @@ export function formatNumber(n: number): string {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(n)
 }
 
-/** Format a USD base price into the active display currency (whole number). */
-export function formatLocalPrice(usd: number, lang: Lang, currency: string): string {
-  const info = CURRENCIES[currency] ?? CURRENCIES.USD
-  // Drop any fractional part so prices always show as whole numbers (203.9 → 203).
-  const amount = Math.floor(usd * info.rate)
-  // Keep Latin (Western) digits even in Arabic; only the currency symbol changes.
-  const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
-  return `${nf.format(amount)} ${info.symbol}`
+/** Local display only; the actual order/payment amount stays in USD/USDT. */
+export function formatLocalPrice(usd: number, lang: Lang, currency: string, rates: Record<string, number> = {}): string {
+  const rate = rates[currency] ?? CURRENCIES[currency]?.rate
+  const displayCurrency = rate && rate > 0 ? currency : 'USD'
+  return new Intl.NumberFormat(lang, { style: 'currency', currency: displayCurrency }).format(usd * (rate && rate > 0 ? rate : 1))
 }

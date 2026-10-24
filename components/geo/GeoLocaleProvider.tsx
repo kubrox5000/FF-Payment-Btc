@@ -1,24 +1,10 @@
 'use client'
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
-import {
-  dirOf,
-  localeForCountry,
-  formatLocalPrice,
-  countryFromTimezone,
-  type Lang,
-} from '@/lib/currencies'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { dirOf, localeForCountry, formatLocalPrice, countryFromTimezone, countryFromLanguageTags, isSupportedCurrency, type Lang } from '@/lib/currencies'
 import { t as translate, type TKey } from '@/lib/i18n'
 import type { ServerLocale } from '@/lib/locale-server'
+import type { LocaleBundle } from '@/lib/locale-bundle'
 
 const OVERRIDE_KEY = 'ff_locale_lang'
 
@@ -29,141 +15,94 @@ export interface LocaleValue {
   currency: string
   countryCode?: string
   t: (key: TKey, vars?: Record<string, string | number>) => string
+  translateText: (text: string) => string
   formatPrice: (usd: number) => string
-  /** Manually override the language (keeps the detected currency). */
+  countryName: (code: string, fallback?: string) => string
   setLang: (lang: Lang) => void
-  /** Manually override the display currency. */
   setCurrency: (currency: string) => void
 }
 
 const LocaleContext = createContext<LocaleValue | null>(null)
 
-interface State {
-  status: 'loading' | 'ready'
-  lang: Lang
-  currency: string
-  countryCode?: string
-}
-
-async function detectCountryCode(): Promise<string | undefined> {
-  const sources = ['https://ipapi.co/json/', 'https://ipwho.is/']
-  for (const url of sources) {
-    try {
-      const ctrl = new AbortController()
-      const timer = setTimeout(() => ctrl.abort(), 3000)
-      const res = await fetch(url, { signal: ctrl.signal })
-      clearTimeout(timer)
-      if (!res.ok) continue
-      const json = (await res.json()) as { country_code?: string; countryCode?: string }
-      const code = (json.country_code ?? json.countryCode ?? '').toUpperCase()
-      if (code) return code
-    } catch {
-      // try next source
-    }
-  }
-  // Fallback: infer from the browser language tag, e.g. 'ar-MA' → 'MA'.
-  const locale = (typeof navigator !== 'undefined' ? navigator.language : '') || ''
-  const parts = locale.toUpperCase().split('-')
-  if (parts.length > 1) return parts[1]
-  return undefined
-}
-
-export function GeoLocaleProvider({
-  children,
-  initialLocale,
-}: {
+export function GeoLocaleProvider({ children, initialLocale, initialBundle }: {
   children: ReactNode
   initialLocale?: ServerLocale
+  initialBundle?: LocaleBundle
 }) {
-  const seeded = useRef(initialLocale)
-  const [state, setState] = useState<State>({
-    status: seeded.current ? 'ready' : 'loading',
-    lang: seeded.current?.lang ?? 'ar',
-    currency: seeded.current?.currency ?? 'SAR',
-    countryCode: seeded.current?.countryCode,
+  const [state, setState] = useState({
+    status: 'ready' as 'loading' | 'ready',
+    lang: initialBundle?.lang ?? initialLocale?.lang ?? 'en',
+    currency: initialLocale?.currency ?? 'USD',
+    countryCode: initialLocale?.countryCode,
+    bundle: initialBundle,
   })
+  const sequence = useRef(0)
 
-  // Keep <html lang> and <html dir> in sync with the active language.
   useEffect(() => {
-    document.documentElement.setAttribute('lang', state.lang)
-    document.documentElement.setAttribute('dir', dirOf(state.lang))
+    document.documentElement.lang = state.lang
+    document.documentElement.dir = dirOf(state.lang)
   }, [state.lang])
 
-  // Apply a stored override and refine the country/currency. First paint is
-  // already correct (server-seeded); then an instant timezone check flips the
-  // language, and a background IP lookup refines the currency further.
-  useEffect(() => {
-    let cancelled = false
-
-    let override: Lang | undefined
+  const loadLanguage = useCallback(async (lang: string) => {
+    const current = ++sequence.current
+    setState(s => ({ ...s, status: 'loading' }))
     try {
-      const stored = globalThis.localStorage?.getItem(OVERRIDE_KEY)
-      override = (stored === 'en' || stored === 'ar' || stored === 'fr' || stored === 'es') ? stored as Lang : undefined
+      const response = await fetch(`/api/locale?lang=${encodeURIComponent(lang)}`, { cache: 'no-store', signal: AbortSignal.timeout(45000) })
+      if (!response.ok) throw new Error('Locale unavailable')
+      const { bundle } = await response.json() as { bundle: LocaleBundle }
+      if (current === sequence.current) setState(s => ({ ...s, lang: bundle.lang, bundle, status: 'ready' }))
     } catch {
-      override = undefined
-    }
-    if (override) setState((s) => ({ ...s, lang: override }))
-
-    const setLocale = (lang: Lang, currency: string, countryCode: string) => {
-      if (cancelled) return
-      setState((s) => ({ ...s, lang: override ?? lang, currency, countryCode }))
-    }
-
-    // Instant, network-free signal: the browser timezone (e.g. Africa/Casablanca → MA).
-    // This reflects the visitor's real physical location, so it is authoritative.
-    const tz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
-    const tzCountry = countryFromTimezone(tz)
-
-    if (tzCountry) {
-      const base = localeForCountry(tzCountry)
-      setLocale(base.lang, base.currency, tzCountry)
-    } else {
-      // Background: only refine via IP lookup when the timezone gives no country.
-      void (async () => {
-        const countryCode = await detectCountryCode()
-        if (!countryCode) return
-        const base = localeForCountry(countryCode)
-        setLocale(base.lang, base.currency, countryCode)
-      })()
-    }
-
-    return () => {
-      cancelled = true
+      if (current === sequence.current) setState(s => ({ ...s, status: 'ready' }))
     }
   }, [])
+
+  useEffect(() => {
+    let lang = initialLocale?.lang ?? 'en'
+    // Never overwrite accurate network geolocation with the device's timezone.
+    if (!initialLocale?.countryDetected) {
+      const preferences = [...navigator.languages]
+      const countryCode = countryFromLanguageTags(preferences)
+        ?? countryFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+      if (countryCode) {
+        const locale = localeForCountry(countryCode, preferences)
+        const hasLanguageOverride = document.cookie.split('; ').some(cookie => cookie.startsWith(`${OVERRIDE_KEY}=`))
+        const hasCurrencyOverride = document.cookie.split('; ').some(cookie => cookie.startsWith('ff_locale_currency='))
+        setState(s => ({ ...s, countryCode, currency: hasCurrencyOverride ? s.currency : locale.currency }))
+        if (!hasLanguageOverride) lang = locale.lang
+      }
+    }
+    // Refresh missing translations and rates after hydration, independently of
+    // the document response. Cached languages still render on the first paint.
+    void loadLanguage(lang)
+  }, [initialLocale?.countryDetected, initialLocale?.lang, loadLanguage])
 
   const setLang = useCallback((lang: Lang) => {
-    try {
-      globalThis.localStorage?.setItem(OVERRIDE_KEY, lang)
-      document.cookie = `${OVERRIDE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`
-    } catch {
-      // ignore storage errors
-    }
-    setState((s) => ({ ...s, lang }))
-  }, [])
+    document.cookie = `${OVERRIDE_KEY}=${encodeURIComponent(lang)}; path=/; max-age=31536000; samesite=lax`
+    void loadLanguage(lang)
+  }, [loadLanguage])
 
   const setCurrency = useCallback((currency: string) => {
-    try {
-      globalThis.localStorage?.setItem('ff_locale_currency', currency)
-    } catch {
-      // ignore storage errors
-    }
-    setState((s) => ({ ...s, currency }))
+    if (!isSupportedCurrency(currency)) return
+    document.cookie = `ff_locale_currency=${currency}; path=/; max-age=31536000; samesite=lax`
+    setState(s => ({ ...s, currency }))
   }, [])
 
-  const value = useMemo<LocaleValue>(() => {
-    return {
-      status: state.status,
-      lang: state.lang,
-      dir: dirOf(state.lang),
-      currency: state.currency,
-      countryCode: state.countryCode,
-      t: (key, vars) => translate(state.lang, key, vars),
-      formatPrice: (usd) => formatLocalPrice(usd, state.lang, state.currency),
-      setLang,
-      setCurrency,
-    }
-  }, [state, setLang, setCurrency])
+  const value = useMemo<LocaleValue>(() => ({
+    status: state.status,
+    lang: state.lang,
+    dir: dirOf(state.lang),
+    currency: state.currency,
+    countryCode: state.countryCode,
+    t: (key, vars) => translate(state.lang, key, vars, state.bundle?.messages),
+    translateText: text => state.bundle?.texts[text] ?? text,
+    formatPrice: usd => formatLocalPrice(usd, state.lang, state.currency, state.bundle?.rates),
+    countryName: (code, fallback) => {
+      try { return new Intl.DisplayNames([state.lang], { type: 'region' }).of(code) ?? fallback ?? code }
+      catch { return fallback ?? code }
+    },
+    setLang,
+    setCurrency,
+  }), [state, setLang, setCurrency])
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }

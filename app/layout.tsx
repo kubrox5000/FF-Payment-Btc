@@ -10,6 +10,7 @@ import { GeoLocaleProvider } from '@/components/geo/GeoLocaleProvider';
 import { PageProgress } from '@/components/site/PageProgress';
 import { resolveServerLocale } from '@/lib/locale-server';
 import { dirOf } from '@/lib/currencies';
+import { getLocaleBundle } from '@/lib/locale-content';
 import { getSettings } from '@/lib/settings';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
@@ -62,9 +63,10 @@ export default async function RootLayout({
     resolveServerLocale(),
     getSettings(),
   ]);
+  const initialBundle = await getLocaleBundle(initialLocale.lang, true);
   const brandScript = `window.__FF_BRAND__=${JSON.stringify({ siteName: settings.siteName ?? '', logo: settings.logo ?? '' })};`
   return (
-    <html lang={initialLocale.lang} dir={dirOf(initialLocale.lang)} className="dark" suppressHydrationWarning>
+    <html lang={initialBundle.lang} dir={dirOf(initialBundle.lang)} className="dark" suppressHydrationWarning>
       <head>
         {/* ── Performance hints ────────────────────────────────────────────── */}
         {/* DNS prefetch + preconnect للخطوط وأي CDN خارجي */}
@@ -90,7 +92,7 @@ export default async function RootLayout({
       >
         {/* شريط التقدم عند الانتقال بين الصفحات */}
         <PageProgress />
-        <GeoLocaleProvider initialLocale={initialLocale}>{children}</GeoLocaleProvider>
+        <GeoLocaleProvider initialLocale={initialLocale} initialBundle={initialBundle}>{children}</GeoLocaleProvider>
         <Toaster position="top-center" richColors closeButton />
         <FacebookPixel />
         <AdPixels />

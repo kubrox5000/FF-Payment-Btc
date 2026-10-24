@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { resolveServerLocale } from './locale-server'
 import { t, type TKey } from './i18n'
 import type { Lang } from './currencies'
+import { getTranslatedMessages } from './locale-content'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://diamondboost.gg'
 
@@ -50,9 +51,10 @@ const ogLocale: Record<Lang, string> = {
  */
 export async function localizedPageMetadata(pageKey: PageTitleKey): Promise<Metadata> {
   const locale = await resolveServerLocale()
-  const fullTitle = t(locale.lang, pageKey as TKey)
+  const translation = await getTranslatedMessages(locale.lang, true)
+  const fullTitle = t(translation.lang, pageKey as TKey, undefined, translation.messages)
   const title = fullTitle ? `${fullTitle} — FF Diamond` : 'FF Diamond'
-  const description = t(locale.lang, (pageKey.replace('title_', 'desc_')) as TKey)
+  const description = t(translation.lang, (pageKey.replace('title_', 'desc_')) as TKey, undefined, translation.messages)
   const path = pagePath[pageKey]
   const url = path ? `${siteUrl}${path}` : undefined
 
@@ -65,7 +67,7 @@ export async function localizedPageMetadata(pageKey: PageTitleKey): Promise<Meta
       description,
       siteName: 'FF Diamond',
       type: 'website',
-      locale: ogLocale[locale.lang],
+      locale: ogLocale[translation.lang] ?? translation.lang,
       ...(url ? { url } : {}),
     },
     twitter: {
