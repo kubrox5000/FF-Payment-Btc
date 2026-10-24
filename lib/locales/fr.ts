@@ -199,6 +199,7 @@ export const fr = {
   pay_submitted_toast: 'Paiement soumis! Nous vérifions votre transaction.',
   pay_track: 'Suivre cette commande',
   pay_alt: 'aperçu de la preuve',
+  pay_heleket_pending: "Le paiement Heleket est en cours de configuration et reste indisponible pour le moment.",
   pay_heleket_title: "Payer avec Heleket",
   pay_heleket_sub: "Paiement crypto sécurisé — USDT, BTC, ETH, TRX et plus",
   pay_heleket_btn: "Payer maintenant",

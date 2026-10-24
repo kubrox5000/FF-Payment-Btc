@@ -199,6 +199,7 @@ export const ar = {
   pay_submitted_toast: 'تم إرسال الدفع! نحن نتحقق من عمليتك.',
   pay_track: 'تتبع هذا الطلب',
   pay_alt: 'معاينة الإثبات',
+  pay_heleket_pending: "جارٍ تجهيز بوابة Heleket. الدفع عبرها غير متاح حالياً.",
   pay_heleket_title: "الدفع عبر Heleket",
   pay_heleket_sub: "دفع آمن بالعملات الرقمية — USDT و BTC و ETH و TRX وغيرها",
   pay_heleket_btn: "ادفع الآن",

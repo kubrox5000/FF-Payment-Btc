@@ -30,14 +30,25 @@ const EMPTY: Draft = {
   sortOrder: 0,
 }
 
-export function PaymentMethodsClient() {
+export function PaymentMethodsClient({ heleket }: { heleket: {
+  configured: boolean
+  merchantPresent: boolean
+  keyPresent: boolean
+} }) {
   const [methods, setMethods] = useState<PublicPaymentMethod[] | null>(null)
   const [editing, setEditing] = useState<{ id: number | null; draft: Draft } | null>(null)
+  const [loadError, setLoadError] = useState(false)
 
   async function load() {
-    const res = await fetch('/api/admin/payment-methods')
-    const data = await res.json()
-    setMethods(data.methods ?? [])
+    setLoadError(false)
+    try {
+      const res = await fetch('/api/admin/payment-methods')
+      if (!res.ok) throw new Error('Load failed')
+      const data = await res.json()
+      setMethods(data.methods ?? [])
+    } catch {
+      setLoadError(true)
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -95,7 +106,36 @@ export function PaymentMethodsClient() {
         </button>
       </div>
 
-      {!methods ? (
+      <section dir="rtl" className="glass rounded-2xl border border-border p-5 sm:p-6" aria-label="حالة ربط Heleket">
+        <div className="flex flex-wrap items-center gap-3">
+          <CryptoIcon id="HELEKET" className="h-11 w-11" />
+          <div className="flex-1">
+            <h2 className="text-lg font-bold">بوابة الدفع Heleket</h2>
+            <p className="text-sm text-muted-foreground">heleket.com · فواتير العملات الرقمية والتأكيد التلقائي للدفع</p>
+          </div>
+          <span className={cn('rounded-full border px-3 py-1 text-xs font-semibold', heleket.configured ? 'border-emerald-500/30 text-emerald-300' : 'border-amber-500/30 text-amber-300')}>
+            {heleket.configured ? 'بيانات الربط متوفرة' : 'بانتظار إعداد بيانات الربط'}
+          </span>
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground">هذه بوابة مدمجة مستقلة عن وسائل التحويل اليدوي أدناه. لا تحتاج إلى إضافة عنوان محفظة أو إنشاء وسيلة دفع جديدة باسمها.</p>
+        <ul className="mt-3 space-y-2 text-sm">
+          <li><code dir="ltr">HELEKET_MERCHANT_ID</code>: {heleket.merchantPresent ? 'مضاف' : 'غير مضاف'}</li>
+          <li><code dir="ltr">HELEKET_API_KEY</code>: {heleket.keyPresent ? 'مضاف' : 'غير مضاف'}</li>
+        </ul>
+        <p className="mt-3 text-sm text-muted-foreground">أضف البيانات في متغيرات البيئة على Netlify لوظائف الخادم، ثم أعد نشر الموقع. لا ترسل المفتاح في المحادثة.</p>
+        <p className="mt-2 text-sm text-muted-foreground">{heleket.configured ? 'توفر البيانات لا يؤكد صلاحيتها. اختبر طلباً صغيراً وتحقق من تحديث حالته بعد الدفع.' : 'يظهر خيار الدفع للعملاء بعد إضافة المتغيرين وإعادة النشر.'}</p>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm font-semibold text-primary">
+          <a href="/top-up" className="underline underline-offset-4">فتح صفحة الشحن</a>
+          <a href="https://heleket.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">موقع Heleket</a>
+        </div>
+      </section>
+
+      {loadError ? (
+        <div role="alert" className="rounded-xl border border-amber-500/30 p-4 text-sm">
+          تعذر تحميل وسائل الدفع المحفوظة. تحقق من اتصال قاعدة البيانات.
+          <button onClick={load} className="mx-3 underline">إعادة المحاولة</button>
+        </div>
+      ) : !methods ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
         </div>

@@ -16,10 +16,11 @@ import { CryptoIcon } from '@/components/site/CryptoIcon'
 import { cn } from '@/utils/cn'
 import type { PublicPackage, PublicPaymentMethod } from '@/lib/types'
 
-export function TopUpForm({ packages, paymentMethods, freeGift }: {
+export function TopUpForm({ packages, paymentMethods, freeGift, heleketConfigured = false }: {
   packages: PublicPackage[]
   paymentMethods: PublicPaymentMethod[]
   freeGift?: string
+  heleketConfigured?: boolean
 }) {
   const router = useRouter()
   const params = useSearchParams()
@@ -184,6 +185,13 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:gap-8">
+      <div className="glass flex items-center gap-3 rounded-2xl border border-border p-4 lg:col-span-2">
+        <CryptoIcon id="HELEKET" className="h-10 w-10 shrink-0" />
+        <div>
+          <p className="font-bold">{t('pay_heleket_title')}</p>
+          <p className="text-sm text-muted-foreground">{t(heleketConfigured ? 'pay_heleket_sub' : 'pay_heleket_pending')}</p>
+        </div>
+      </div>
       <div>
         {/* Package selection */}
         <SectionHeading>{t('top_step1')}</SectionHeading>

@@ -13,7 +13,7 @@ import { getSettings } from '@/lib/settings'
 import { SEED_PACKAGES } from '@/lib/seed-data'
 import type { PublicPackage, PublicPaymentMethod } from '@/lib/types'
 import { localizedPageMetadata } from '@/lib/seo'
-import { withHeleket } from '@/lib/heleket'
+import { withHeleket, isHeleketConfigured } from '@/lib/heleket'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,7 +49,7 @@ export default async function TopUpPage() {
         <OfficialBannerSection />
 
         <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-secondary/40" />}>
-          <TopUpForm packages={pkgRows} paymentMethods={withHeleket(methods)} freeGift={settings.freeGift} />
+          <TopUpForm packages={pkgRows} paymentMethods={withHeleket(methods)} freeGift={settings.freeGift} heleketConfigured={isHeleketConfigured()} />
         </Suspense>
       </main>
       <SiteFooter settings={settings} />
