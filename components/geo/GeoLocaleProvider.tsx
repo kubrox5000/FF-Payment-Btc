@@ -17,10 +17,11 @@ import {
   countryFromTimezone,
   type Lang,
 } from '@/lib/currencies'
+import { LANGUAGE_COOKIE, CURRENCY_COOKIE, validLang, validCurrency, validCountry } from '@/lib/visitor-locale'
 import { t as translate, type TKey } from '@/lib/i18n'
 import type { ServerLocale } from '@/lib/locale-server'
 
-const OVERRIDE_KEY = 'ff_locale_lang'
+const OVERRIDE_KEY = LANGUAGE_COOKIE
 
 export interface LocaleValue {
   status: 'loading' | 'ready'
@@ -45,29 +46,6 @@ interface State {
   countryCode?: string
 }
 
-async function detectCountryCode(): Promise<string | undefined> {
-  const sources = ['https://ipapi.co/json/', 'https://ipwho.is/']
-  for (const url of sources) {
-    try {
-      const ctrl = new AbortController()
-      const timer = setTimeout(() => ctrl.abort(), 3000)
-      const res = await fetch(url, { signal: ctrl.signal })
-      clearTimeout(timer)
-      if (!res.ok) continue
-      const json = (await res.json()) as { country_code?: string; countryCode?: string }
-      const code = (json.country_code ?? json.countryCode ?? '').toUpperCase()
-      if (code) return code
-    } catch {
-      // try next source
-    }
-  }
-  // Fallback: infer from the browser language tag, e.g. 'ar-MA' → 'MA'.
-  const locale = (typeof navigator !== 'undefined' ? navigator.language : '') || ''
-  const parts = locale.toUpperCase().split('-')
-  if (parts.length > 1) return parts[1]
-  return undefined
-}
-
 export function GeoLocaleProvider({
   children,
   initialLocale,
@@ -76,10 +54,12 @@ export function GeoLocaleProvider({
   initialLocale?: ServerLocale
 }) {
   const seeded = useRef(initialLocale)
+  const manualLang = useRef<Lang | undefined>(undefined)
+  const manualCurrency = useRef<string | undefined>(undefined)
   const [state, setState] = useState<State>({
     status: seeded.current ? 'ready' : 'loading',
-    lang: seeded.current?.lang ?? 'ar',
-    currency: seeded.current?.currency ?? 'SAR',
+    lang: seeded.current?.lang ?? 'en',
+    currency: seeded.current?.currency ?? 'USD',
     countryCode: seeded.current?.countryCode,
   })
 
@@ -89,53 +69,44 @@ export function GeoLocaleProvider({
     document.documentElement.setAttribute('dir', dirOf(state.lang))
   }, [state.lang])
 
-  // Apply a stored override and refine the country/currency. First paint is
-  // already correct (server-seeded); then an instant timezone check flips the
-  // language, and a background IP lookup refines the currency further.
+  // Netlify geo data is authoritative. Browser hints are used only locally or
+  // when the hosting platform cannot identify the visitor's country.
   useEffect(() => {
-    let cancelled = false
-
-    let override: Lang | undefined
-    try {
-      const stored = globalThis.localStorage?.getItem(OVERRIDE_KEY)
-      override = (stored === 'en' || stored === 'ar' || stored === 'fr' || stored === 'es') ? stored as Lang : undefined
-    } catch {
-      override = undefined
+    const readPreference = (key: string) => {
+      const cookie = document.cookie.split('; ').find((part) => part.startsWith(`${key}=`))?.slice(key.length + 1)
+      if (cookie) return cookie
+      try { return localStorage.getItem(key) } catch { return undefined }
     }
-    if (override) setState((s) => ({ ...s, lang: override }))
+    manualLang.current = validLang(readPreference(LANGUAGE_COOKIE))
+    manualCurrency.current = validCurrency(readPreference(CURRENCY_COOKIE))
+    // Migrate preferences saved by the previous client-only implementation.
+    if (manualLang.current) document.cookie = `${LANGUAGE_COOKIE}=${manualLang.current}; path=/; max-age=31536000; samesite=lax`
+    if (manualCurrency.current) document.cookie = `${CURRENCY_COOKIE}=${manualCurrency.current}; path=/; max-age=31536000; samesite=lax`
 
-    const setLocale = (lang: Lang, currency: string, countryCode: string) => {
-      if (cancelled) return
-      setState((s) => ({ ...s, lang: override ?? lang, currency, countryCode }))
+    let countryCode = seeded.current?.countryCode
+    if (!countryCode) {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      const region = navigator.languages.map((language) => {
+        try { return validCountry(new Intl.Locale(language).region) } catch { return undefined }
+      }).find(Boolean)
+      countryCode = countryFromTimezone(timezone) ?? region
     }
-
-    // Instant, network-free signal: the browser timezone (e.g. Africa/Casablanca → MA).
-    // This reflects the visitor's real physical location, so it is authoritative.
-    const tz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
-    const tzCountry = countryFromTimezone(tz)
-
-    if (tzCountry) {
-      const base = localeForCountry(tzCountry)
-      setLocale(base.lang, base.currency, tzCountry)
-    } else {
-      // Background: only refine via IP lookup when the timezone gives no country.
-      void (async () => {
-        const countryCode = await detectCountryCode()
-        if (!countryCode) return
-        const base = localeForCountry(countryCode)
-        setLocale(base.lang, base.currency, countryCode)
-      })()
-    }
-
-    return () => {
-      cancelled = true
-    }
+    const base = countryCode ? localeForCountry(countryCode) : seeded.current
+    const browserLang = navigator.languages.map((language) => validLang(language.split('-')[0])).find(Boolean)
+    setState((s) => ({
+      ...s,
+      status: 'ready',
+      countryCode,
+      lang: manualLang.current ?? (countryCode ? base?.lang : browserLang) ?? base?.lang ?? s.lang,
+      currency: manualCurrency.current ?? base?.currency ?? s.currency,
+    }))
   }, [])
 
   const setLang = useCallback((lang: Lang) => {
+    manualLang.current = lang
+    document.cookie = `${OVERRIDE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`
     try {
       globalThis.localStorage?.setItem(OVERRIDE_KEY, lang)
-      document.cookie = `${OVERRIDE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`
     } catch {
       // ignore storage errors
     }
@@ -143,6 +114,9 @@ export function GeoLocaleProvider({
   }, [])
 
   const setCurrency = useCallback((currency: string) => {
+    if (!validCurrency(currency)) return
+    manualCurrency.current = currency
+    document.cookie = `${CURRENCY_COOKIE}=${currency}; path=/; max-age=31536000; samesite=lax`
     try {
       globalThis.localStorage?.setItem('ff_locale_currency', currency)
     } catch {

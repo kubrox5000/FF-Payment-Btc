@@ -24,7 +24,7 @@ export async function generateMetadata() {
 export default async function TopUpPage() {
   let pkgRows: PublicPackage[] = SEED_PACKAGES
   let methods: PublicPaymentMethod[] = []
-  let settings = await getSettings()
+  const settings = await getSettings()
 
   if (process.env.DATABASE_URL) {
     try {
@@ -49,7 +49,7 @@ export default async function TopUpPage() {
         <OfficialBannerSection />
 
         <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-secondary/40" />}>
-          <TopUpForm packages={pkgRows} paymentMethods={withHeleket(methods)} freeGift={settings.freeGift} />
+          <TopUpForm packages={pkgRows} paymentMethods={await withHeleket(methods)} freeGift={settings.freeGift} />
         </Suspense>
       </main>
       <SiteFooter settings={settings} />

@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { packages, orders, coupons, paymentMethods } from '@/db/schemas'
 import { eq, sql } from 'drizzle-orm'
 import { generateOrderNumber, discountedPrice } from '@/lib/orders'
-import { getSettings } from '@/lib/settings'
+import { getSettings, getHeleketEnabled } from '@/lib/settings'
 import { HELEKET_KEY, isHeleketConfigured, createHeleketInvoice } from '@/lib/heleket'
 
 const createSchema = z.object({
@@ -42,6 +42,17 @@ export async function POST(req: NextRequest) {
   const pkg = pkgRows[0]
   if (!pkg || !pkg.active) {
     return NextResponse.json({ error: 'Package not found' }, { status: 404 })
+  }
+
+  // Reject stale checkout pages and direct API calls before any side effects.
+  if (data.paymentMethod === HELEKET_KEY) {
+    try {
+      if (!isHeleketConfigured() || !(await getHeleketEnabled())) {
+        return NextResponse.json({ error: 'Heleket payments are currently unavailable' }, { status: 503 })
+      }
+    } catch {
+      return NextResponse.json({ error: 'Could not verify payment availability. Please try again.' }, { status: 503 })
+    }
   }
 
   // ── Apply coupon (if valid) ───────────────────────────────────────────────
