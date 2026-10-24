@@ -48,6 +48,12 @@ A general-purpose Next.js web application template with database initialization 
    - `pnpm db:migrate` — run migrations
    - `pnpm db:studio` — open Drizzle Studio
 
+## Netlify deployment
+
+The root `netlify.toml` sets the build command to `pnpm build` and the publish directory to `.next`. Netlify automatically detects Next.js and applies its adapter to serve pages, dynamic routes, and API handlers.
+
+Deploy the repository from its root directory. Publishing only `public/` or uploading source files as a static site leaves the server-rendered homepage unavailable and can produce Netlify's “Page not found” response. A new deployment is required after changing the build configuration.
+
 ## Project Structure
 
 - `app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).

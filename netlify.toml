@@ -1,0 +1,6 @@
+[build]
+  command = "pnpm build"
+  publish = ".next"
+
+# Netlify automatically applies its Next.js adapter to serve App Router pages,
+# dynamic routes, and API handlers. Publish the Next.js output, not public/.
