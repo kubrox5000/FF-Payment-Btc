@@ -4,17 +4,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Languages, ChevronDown, Check } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useLocale } from './GeoLocaleProvider'
-import type { Lang } from '@/lib/currencies'
+import { LANGUAGES as AVAILABLE_LANGUAGES, type Lang } from '@/lib/currencies'
 
-const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
-  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
-  { code: 'en', label: 'English',  flag: '🇺🇸' },
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'es', label: 'Español',  flag: '🇪🇸' },
-]
+const LANGUAGES: { code: Lang; label: string; flag: string }[] = Object.entries(AVAILABLE_LANGUAGES).map(([code, info]) => ({ code, label: info.label, flag: '' }))
 
 export function LangSwitch({ className }: { className?: string }) {
-  const { lang, setLang } = useLocale()
+  const { lang, setLang, status } = useLocale()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -37,16 +32,17 @@ export function LangSwitch({ className }: { className?: string }) {
         onClick={() => setOpen((v) => !v)}
         aria-label="Switch language"
         aria-expanded={open}
+        aria-busy={status === 'loading'}
         className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/70 touch-manipulation"
       >
         <Languages className="h-4 w-4 text-muted-foreground" />
         <span translate="no" className="hidden sm:inline">{current.flag} {current.label}</span>
-        <span translate="no" className="sm:hidden">{current.flag}</span>
+        <span translate="no" className="sm:hidden">{current.code.toUpperCase()}</span>
         <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', open && 'rotate-180')} />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-40 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+        <div className="absolute right-0 top-full z-50 mt-1.5 max-h-80 w-56 overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}

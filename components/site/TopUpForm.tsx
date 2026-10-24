@@ -23,7 +23,7 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
 }) {
   const router = useRouter()
   const params = useSearchParams()
-  const { t, formatPrice, countryCode, lang } = useLocale()
+  const { t, formatPrice, countryCode, lang, countryName } = useLocale()
   const preselect = params.get('package')
   const sortedPackages = useMemo(() => [...packages].sort((a, b) => a.diamonds - b.diamonds), [packages])
 
@@ -83,10 +83,10 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
     if (countryTouched.current || !countryCode) return
     const match = countryByCode(countryCode)
     if (match) {
-      setCountry(lang === 'ar' ? match.ar : match.en)
+      setCountry(countryName(match.code, match.en))
       setDial(DIAL_CODES[countryCode] ?? '')
     }
-  }, [countryCode, lang])
+  }, [countryCode, lang, countryName])
 
   const price = useMemo(() => {
     if (!selected) return { usd: 0, usdt: 0 }
@@ -229,7 +229,7 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
                 <option value="" disabled className="bg-card text-foreground">{t('f_country_ph')}</option>
                 {orderedCountries().map((c) => (
                   <option key={c.code} value={c.en} className="bg-card text-foreground">
-                    {lang === 'ar' ? c.ar : c.en}
+                    {countryName(c.code, c.en)}
                   </option>
                 ))}
               </select>
