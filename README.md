@@ -48,6 +48,12 @@ A general-purpose Next.js web application template with database initialization 
    - `pnpm db:migrate` — run migrations
    - `pnpm db:studio` — open Drizzle Studio
 
+## Netlify Deployment
+
+The repository's `netlify.toml` configures `pnpm build`, publishes `.next`, and enables Netlify's Next.js adapter to serve pages and API routes. Deploy from the repository root; publishing `public/` alone does not deploy the application.
+
+Configure runtime environment variables in the Netlify project settings. A new deployment is required after changing deployment settings.
+
 ## Project Structure
 
 - `app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).
