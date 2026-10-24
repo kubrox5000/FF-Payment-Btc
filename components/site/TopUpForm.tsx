@@ -35,7 +35,7 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
   const [dial, setDial] = useState('+966')
   const [phone, setPhone] = useState('')
   const countryTouched = useRef(false)
-  const [method, setMethod] = useState<string>('')
+  const [method, setMethod] = useState<string>('HELEKET')
 
   // ── Card fields ────────────────────────────────────────────────────────────
   const [coupon, setCoupon] = useState('')
@@ -46,7 +46,7 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
 
   // ── Payment-method accordion state ─────────────────────────────────────────
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    if (!method) return { crypto: false, wallet: false }
+    if (!method) return { crypto: true, wallet: false }
     const cat = paymentMethods.find((m) => m.key === method)?.cat === 'crypto' ? 'crypto' : 'wallet'
     return { crypto: cat === 'crypto', wallet: cat === 'wallet' }
   })
@@ -71,7 +71,7 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
 
   // عند اختيار طريقة الدفع، الانتقال تلقائياً إلى ملخص الطلب
   useEffect(() => {
-    if (!method) return
+    if (!method || method === 'HELEKET') return
     const el = document.getElementById('order-summary')
     if (!el) return
     const y = el.getBoundingClientRect().top + window.scrollY - 96
@@ -257,7 +257,7 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
         {/* Payment method */}
         <div id="payment-methods" className="mt-8 scroll-mt-24 lg:mt-10">
           <SectionHeading>{t('top_step3')}</SectionHeading>
-          <p className="-mt-1 mb-4 text-sm text-muted-foreground lg:mb-5">{t('pay_group_hint')}</p>
+          <p className="-mt-1 mb-4 text-sm text-muted-foreground lg:mb-5">{lang === 'ar' ? 'اختر العملة والشبكة داخل صفحة Heleket الآمنة. يتم تأكيد الدفع تلقائيًا.' : 'Choose your currency and network on Heleket’s secure checkout. Payment is confirmed automatically.'}</p>
 
           <div className="space-y-4">
             {/* العملات الرقمية */}

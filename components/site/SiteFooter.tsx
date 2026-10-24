@@ -7,14 +7,7 @@ import { useLocale } from '@/components/geo/GeoLocaleProvider'
 import { SiteBrand } from '@/components/site/SiteBrand'
 import { OfficialFooterBadge } from '@/components/site/OfficialBadge'
 
-const payments = [
-  { label: 'G Pay', className: 'bg-white text-black' },
-  { label: 'Pay', className: 'bg-black text-white ring-1 ring-white/20' },
-  { label: 'PayPal', className: 'bg-[#003087] text-white' },
-  { label: 'AMEX', className: 'bg-[#1f72cd] text-white' },
-  { label: 'MC', className: 'bg-[#eb001b] text-white' },
-  { label: 'VISA', className: 'bg-[#1a1f71] text-white' },
-]
+const payments = [{ label: 'Heleket', className: 'bg-white text-black' }]
 
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   const { t } = useLocale()
