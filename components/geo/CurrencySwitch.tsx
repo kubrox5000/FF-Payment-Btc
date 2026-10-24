@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Coins, ChevronDown, Check } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { CURRENCIES as SUPPORTED_CURRENCIES } from '@/lib/currencies'
 import { useLocale } from './GeoLocaleProvider'
 
 interface CurrencyOption {
@@ -12,17 +13,12 @@ interface CurrencyOption {
   label: string
 }
 
-const CURRENCIES: CurrencyOption[] = [
-  { code: 'USD', symbol: '$',    flag: '🇺🇸', label: 'US Dollar' },
-  { code: 'EUR', symbol: '€',    flag: '🇪🇺', label: 'Euro' },
-  { code: 'GBP', symbol: '£',    flag: '🇬🇧', label: 'Pound' },
-  { code: 'SAR', symbol: 'ر.س', flag: '🇸🇦', label: 'Saudi Riyal' },
-  { code: 'AED', symbol: 'د.إ', flag: '🇦🇪', label: 'Emirates Dirham' },
-  { code: 'KWD', symbol: 'د.ك', flag: '🇰🇼', label: 'Kuwaiti Dinar' },
-  { code: 'QAR', symbol: 'ر.ق', flag: '🇶🇦', label: 'Qatari Riyal' },
-  { code: 'BHD', symbol: 'د.ب', flag: '🇧🇭', label: 'Bahrain Dinar' },
-  { code: 'OMR', symbol: 'ر.ع', flag: '🇴🇲', label: 'Omani Rial' },
-]
+const CURRENCIES: CurrencyOption[] = Object.values(SUPPORTED_CURRENCIES).map((currency) => ({
+  code: currency.code,
+  symbol: currency.symbol,
+  flag: '💱',
+  label: currency.name,
+}))
 
 export function CurrencySwitch({ className }: { className?: string }) {
   const { currency, setCurrency } = useLocale()
@@ -63,7 +59,7 @@ export function CurrencySwitch({ className }: { className?: string }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+        <div className="absolute right-0 top-full z-50 mt-1.5 max-h-80 w-60 overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
           {CURRENCIES.map((c) => (
             <button
               key={c.code}

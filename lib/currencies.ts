@@ -47,11 +47,68 @@ export const CURRENCIES: Record<string, CurrencyInfo> = {
   NGN: { code: 'NGN', name: 'Nigerian Naira', symbol: '₦', rate: 1500 },
   THB: { code: 'THB', name: 'Thai Baht', symbol: '฿', rate: 34 },
   MYR: { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM', rate: 4.3 },
+  CAD: { code: 'CAD', name: 'Canadian Dollar', symbol: 'CA$', rate: 1.37 },
+  AUD: { code: 'AUD', name: 'Australian Dollar', symbol: 'A$', rate: 1.52 },
+  NZD: { code: 'NZD', name: 'New Zealand Dollar', symbol: 'NZ$', rate: 1.65 },
+  CHF: { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF', rate: 0.9 },
+  JPY: { code: 'JPY', name: 'Japanese Yen', symbol: '¥', rate: 150 },
+  CNY: { code: 'CNY', name: 'Chinese Yuan', symbol: 'CN¥', rate: 7.2 },
+  KRW: { code: 'KRW', name: 'South Korean Won', symbol: '₩', rate: 1350 },
+  HKD: { code: 'HKD', name: 'Hong Kong Dollar', symbol: 'HK$', rate: 7.8 },
+  SGD: { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$', rate: 1.35 },
+  TWD: { code: 'TWD', name: 'Taiwan Dollar', symbol: 'NT$', rate: 32 },
+  VND: { code: 'VND', name: 'Vietnamese Dong', symbol: '₫', rate: 25000 },
+  BDT: { code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 120 },
+  LKR: { code: 'LKR', name: 'Sri Lankan Rupee', symbol: 'Rs', rate: 300 },
+  NPR: { code: 'NPR', name: 'Nepalese Rupee', symbol: 'Rs', rate: 133.6 },
+  ZAR: { code: 'ZAR', name: 'South African Rand', symbol: 'R', rate: 18.5 },
+  KES: { code: 'KES', name: 'Kenyan Shilling', symbol: 'KSh', rate: 130 },
+  GHS: { code: 'GHS', name: 'Ghanaian Cedi', symbol: 'GH₵', rate: 15 },
+  RUB: { code: 'RUB', name: 'Russian Ruble', symbol: '₽', rate: 90 },
+  UAH: { code: 'UAH', name: 'Ukrainian Hryvnia', symbol: '₴', rate: 41 },
+  PLN: { code: 'PLN', name: 'Polish Zloty', symbol: 'zł', rate: 4 },
+  RON: { code: 'RON', name: 'Romanian Leu', symbol: 'lei', rate: 4.6 },
+  CZK: { code: 'CZK', name: 'Czech Koruna', symbol: 'Kč', rate: 23 },
+  HUF: { code: 'HUF', name: 'Hungarian Forint', symbol: 'Ft', rate: 360 },
+  SEK: { code: 'SEK', name: 'Swedish Krona', symbol: 'kr', rate: 10.5 },
+  NOK: { code: 'NOK', name: 'Norwegian Krone', symbol: 'kr', rate: 10.7 },
+  DKK: { code: 'DKK', name: 'Danish Krone', symbol: 'kr', rate: 6.87 },
+  MXN: { code: 'MXN', name: 'Mexican Peso', symbol: 'MX$', rate: 18 },
+  COP: { code: 'COP', name: 'Colombian Peso', symbol: 'CO$', rate: 4000 },
+  ARS: { code: 'ARS', name: 'Argentine Peso', symbol: 'AR$', rate: 1000 },
+  CLP: { code: 'CLP', name: 'Chilean Peso', symbol: 'CL$', rate: 950 },
+  PEN: { code: 'PEN', name: 'Peruvian Sol', symbol: 'S/', rate: 3.75 },
+  UYU: { code: 'UYU', name: 'Uruguayan Peso', symbol: '$U', rate: 40 },
+  BOB: { code: 'BOB', name: 'Bolivian Boliviano', symbol: 'Bs', rate: 6.91 },
+  PYG: { code: 'PYG', name: 'Paraguayan Guarani', symbol: '₲', rate: 7500 },
+  XOF: { code: 'XOF', name: 'West African CFA Franc', symbol: 'CFA', rate: 603.7 },
+  XAF: { code: 'XAF', name: 'Central African CFA Franc', symbol: 'FCFA', rate: 603.7 },
+  XPF: { code: 'XPF', name: 'CFP Franc', symbol: '₣', rate: 109.8 },
+  MUR: { code: 'MUR', name: 'Mauritian Rupee', symbol: 'Rs', rate: 46 },
+  MGA: { code: 'MGA', name: 'Malagasy Ariary', symbol: 'Ar', rate: 4500 },
+  CDF: { code: 'CDF', name: 'Congolese Franc', symbol: 'FC', rate: 2800 },
+  RWF: { code: 'RWF', name: 'Rwandan Franc', symbol: 'RF', rate: 1400 },
+  BIF: { code: 'BIF', name: 'Burundian Franc', symbol: 'FBu', rate: 2900 },
+  HTG: { code: 'HTG', name: 'Haitian Gourde', symbol: 'G', rate: 132 },
+  DJF: { code: 'DJF', name: 'Djiboutian Franc', symbol: 'Fdj', rate: 177.72 },
+  MRU: { code: 'MRU', name: 'Mauritanian Ouguiya', symbol: 'UM', rate: 40 },
+  SOS: { code: 'SOS', name: 'Somali Shilling', symbol: 'Sh', rate: 571 },
+  SDG: { code: 'SDG', name: 'Sudanese Pound', symbol: 'ج.س', rate: 600 },
+  YER: { code: 'YER', name: 'Yemeni Rial', symbol: 'ر.ي', rate: 250 },
+  SYP: { code: 'SYP', name: 'Syrian Pound', symbol: 'ل.س', rate: 13000 },
+  ILS: { code: 'ILS', name: 'Israeli Shekel', symbol: '₪', rate: 3.7 },
+  KMF: { code: 'KMF', name: 'Comorian Franc', symbol: 'CF', rate: 452.6 },
+  ISK: { code: 'ISK', name: 'Icelandic Krona', symbol: 'kr', rate: 138 },
+  GTQ: { code: 'GTQ', name: 'Guatemalan Quetzal', symbol: 'Q', rate: 7.8 },
+  HNL: { code: 'HNL', name: 'Honduran Lempira', symbol: 'L', rate: 25 },
+  NIO: { code: 'NIO', name: 'Nicaraguan Cordoba', symbol: 'C$', rate: 36.6 },
+  CRC: { code: 'CRC', name: 'Costa Rican Colon', symbol: '₡', rate: 510 },
+  DOP: { code: 'DOP', name: 'Dominican Peso', symbol: 'RD$', rate: 60 },
+  CUP: { code: 'CUP', name: 'Cuban Peso', symbol: '₱', rate: 24 },
+
 }
 
-// Country → currency. Arabic is the official, always-on language of the site;
-// the country mapping only adjusts the display currency so prices adapt to the
-// visitor's region (SAR is the universal fallback).
+// Country defaults use the available translations; other languages fall back to English.
 const COUNTRY_LOCALE: Record<string, LocaleConfig> = {
   // MENA / Arabic-speaking
   SA: { lang: 'ar', currency: 'SAR' },
@@ -114,7 +171,84 @@ const COUNTRY_LOCALE: Record<string, LocaleConfig> = {
   PL: { lang: 'en', currency: 'EUR' },
 }
 
-export const FALLBACK_LOCALE: LocaleConfig = { lang: 'ar', currency: 'SAR' }
+
+// Currency groups also cover territories sharing a currency.
+const CURRENCY_COUNTRIES: Record<string, string> = {
+  CAD: 'CA',
+  AUD: 'AU CX CC NF',
+  NZD: 'NZ CK NU PN TK',
+  CHF: 'CH LI',
+  JPY: 'JP',
+  CNY: 'CN',
+  KRW: 'KR',
+  HKD: 'HK',
+  SGD: 'SG',
+  TWD: 'TW',
+  VND: 'VN',
+  BDT: 'BD',
+  LKR: 'LK',
+  NPR: 'NP',
+  ZAR: 'ZA LS NA',
+  KES: 'KE',
+  GHS: 'GH',
+  RUB: 'RU',
+  UAH: 'UA',
+  PLN: 'PL',
+  RON: 'RO',
+  CZK: 'CZ',
+  HUF: 'HU',
+  SEK: 'SE',
+  NOK: 'NO SJ BV',
+  DKK: 'DK FO GL',
+  MXN: 'MX',
+  COP: 'CO',
+  ARS: 'AR',
+  CLP: 'CL',
+  PEN: 'PE',
+  UYU: 'UY',
+  BOB: 'BO',
+  PYG: 'PY',
+  XOF: 'BJ BF CI GW ML NE SN TG',
+  XAF: 'CM CF TD CG GQ GA',
+  XPF: 'PF NC WF',
+  MUR: 'MU',
+  MGA: 'MG',
+  CDF: 'CD',
+  RWF: 'RW',
+  BIF: 'BI',
+  HTG: 'HT',
+  DJF: 'DJ',
+  MRU: 'MR',
+  SOS: 'SO',
+  SDG: 'SD',
+  YER: 'YE',
+  SYP: 'SY',
+  ILS: 'IL PS',
+  KMF: 'KM',
+  ISK: 'IS',
+  GTQ: 'GT',
+  HNL: 'HN',
+  NIO: 'NI',
+  CRC: 'CR',
+  DOP: 'DO',
+  CUP: 'CU',
+  EUR: 'AD AT AX BE BL CY DE EE ES FI FR GF GP GR HR IE IT LT LU LV MC ME MF MQ MT NL PM PT RE SI SK SM TF VA YT',
+  USD: 'US AS BQ EC FM GU IO MH MP PA PR PW SV TC TL UM VG VI',
+}
+for (const [currency, countries] of Object.entries(CURRENCY_COUNTRIES)) {
+  for (const country of countries.split(' ')) {
+    COUNTRY_LOCALE[country] = { lang: COUNTRY_LOCALE[country]?.lang ?? 'en', currency }
+  }
+}
+for (const country of 'FR BE LU MC CH BJ BF BI CD CF CG CI CM DJ GA GN HT MG ML MU NE RE RW SN TD TG YT PF NC WF'.split(' ')) {
+  COUNTRY_LOCALE[country] = { lang: 'fr', currency: COUNTRY_LOCALE[country]?.currency ?? 'USD' }
+}
+for (const country of 'ES MX CO AR CL PE VE UY BO PY EC PA CR CU DO GT HN NI SV GQ PR'.split(' ')) {
+  COUNTRY_LOCALE[country] = { lang: 'es', currency: COUNTRY_LOCALE[country]?.currency ?? 'USD' }
+}
+COUNTRY_LOCALE.KM = { lang: 'ar', currency: 'KMF' }
+
+export const FALLBACK_LOCALE: LocaleConfig = { lang: 'en', currency: 'USD' }
 
 // Timezone → country. A fast, network-free signal for the visitor's physical
 // location (more reliable than browser language, which is often left in English).
@@ -149,15 +283,10 @@ export function countryFromTimezone(timeZone?: string): string | undefined {
   return TIMEZONE_COUNTRY[timeZone]
 }
 
-/**
- * Map an ISO country code to the visitor's locale. Arabic is the official
- * language and is always returned regardless of country; only the currency is
- * adjusted per region (SAR as the universal fallback).
- */
+/** Resolve country defaults, with English/USD for unsupported regions. */
 export function localeForCountry(countryCode: string | undefined): LocaleConfig {
   const code = (countryCode ?? '').trim().toUpperCase()
-  const currency = COUNTRY_LOCALE[code]?.currency ?? FALLBACK_LOCALE.currency
-  return { lang: 'ar', currency }
+  return { ...(COUNTRY_LOCALE[code] ?? FALLBACK_LOCALE) }
 }
 
 /** A "generic" interface used by the provider before a final decision. */
