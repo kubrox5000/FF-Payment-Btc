@@ -1,3 +1,9 @@
 [build]
   command = "pnpm run build"
   publish = ".next"
+
+# Next.js adapter: turns the .next output into Netlify Functions/Edge Functions
+# so server-rendered pages, API routes and middleware work (without it every
+# route returns Netlify's "Page not found").
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
