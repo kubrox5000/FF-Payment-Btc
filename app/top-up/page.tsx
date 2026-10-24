@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { db } from '@/db'
-import { packages, paymentMethods } from '@/db/schemas'
+import { packages } from '@/db/schemas'
 import { eq, asc } from 'drizzle-orm'
 import { SiteNav } from '@/components/site/SiteNav'
 import { SiteFooter } from '@/components/site/SiteFooter'
@@ -13,6 +13,7 @@ import { getSettings } from '@/lib/settings'
 import { SEED_PACKAGES } from '@/lib/seed-data'
 import type { PublicPackage, PublicPaymentMethod } from '@/lib/types'
 import { localizedPageMetadata } from '@/lib/seo'
+import { HELEKET_METHOD } from '@/lib/payment-method'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,17 +23,13 @@ export async function generateMetadata() {
 
 export default async function TopUpPage() {
   let pkgRows: PublicPackage[] = SEED_PACKAGES
-  let methods: PublicPaymentMethod[] = []
-  let settings = await getSettings()
+  const methods: PublicPaymentMethod[] = [HELEKET_METHOD]
+  const settings = await getSettings()
 
   if (process.env.DATABASE_URL) {
     try {
-      const [dbPkgs, dbMethods] = await Promise.all([
-        db.select().from(packages).where(eq(packages.active, true)).orderBy(asc(packages.sortOrder)),
-        db.select().from(paymentMethods).where(eq(paymentMethods.active, true)).orderBy(asc(paymentMethods.sortOrder)),
-      ])
+      const dbPkgs = await db.select().from(packages).where(eq(packages.active, true)).orderBy(asc(packages.sortOrder))
       pkgRows = dbPkgs as unknown as PublicPackage[]
-      methods = dbMethods as unknown as PublicPaymentMethod[]
     } catch {
       // fallback to seed data
     }

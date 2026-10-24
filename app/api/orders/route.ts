@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/db'
-import { packages, orders, coupons, paymentMethods } from '@/db/schemas'
+import { packages, orders, coupons } from '@/db/schemas'
 import { eq, sql } from 'drizzle-orm'
 import { generateOrderNumber, discountedPrice } from '@/lib/orders'
-import { getSettings } from '@/lib/settings'
+import { heleketConfigured } from '@/lib/heleket'
 
 const createSchema = z.object({
   packageId: z.number().int().positive(),
@@ -14,7 +14,7 @@ const createSchema = z.object({
   email: z.string().email().optional().nullable().or(z.literal('')),
   country: z.string().max(60).optional().nullable(),
   phone: z.string().max(30).optional().nullable(),
-  paymentMethod: z.string().min(1).max(60),
+  paymentMethod: z.literal('HELEKET'),
   couponCode: z.string().max(40).optional().nullable(),
 })
 
@@ -25,14 +25,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' }, { status: 400 })
   }
   const data = parsed.data
+  if (!heleketConfigured()) {
+    return NextResponse.json({ error: 'Heleket payments are not available yet. Please try again later.' }, { status: 503 })
+  }
 
-  // ── Fetch package + settings + payment method + coupon in parallel ──────────
+  // Prices and discounts are resolved on the server.
   const couponCode = data.couponCode ? data.couponCode.trim().toUpperCase() : null
 
-  const [pkgRows, settingsData, pmRows, couponRows] = await Promise.all([
+  const [pkgRows, couponRows] = await Promise.all([
     db.select().from(packages).where(eq(packages.id, data.packageId)).limit(1),
-    getSettings(),
-    db.select().from(paymentMethods).where(eq(paymentMethods.key, data.paymentMethod)).limit(1),
     couponCode
       ? db.select().from(coupons).where(eq(coupons.code, couponCode)).limit(1)
       : Promise.resolve([] as typeof coupons.$inferSelect[]),
@@ -53,33 +54,11 @@ export async function POST(req: NextRequest) {
     baseUsd   = +(baseUsd  * (1 - coupon.discountPct / 100)).toFixed(2)
     baseUsdt  = +(baseUsdt * (1 - coupon.discountPct / 100)).toFixed(2)
     appliedCoupon = couponCode
-    // Fire coupon usage increment without blocking the response
-    void db
+    await db
       .update(coupons)
       .set({ usedCount: sql`${coupons.usedCount} + 1` })
       .where(eq(coupons.id, coupon.id))
   }
-
-  // ── Resolve wallet address ────────────────────────────────────────────────
-  const WALLETS: Record<string, string | undefined> = {
-    USDT_TRC20:  settingsData.walletTrc20,
-    USDT_BEP20:  settingsData.walletBep20,
-    BINANCE_PAY: settingsData.binancePayId,
-    BTC:         settingsData.walletBtc,
-    ETH:         settingsData.walletEth,
-    BNB:         settingsData.walletBnb,
-    USDC:        settingsData.walletUsdc,
-    SOL:         settingsData.walletSol,
-    WISE:        settingsData.paymentWise,
-    PAYONEER:    settingsData.paymentPayoneer,
-    SKRILL:      settingsData.paymentSkrill,
-    NETELLER:    settingsData.paymentNeteller,
-    REDOTPAY:    settingsData.paymentRedotpay,
-    BYBIT:       settingsData.paymentBybit,
-    REVOLUT:     settingsData.paymentRevolut,
-  }
-
-  const walletAddress = pmRows[0]?.walletAddress?.trim() || (WALLETS[data.paymentMethod] ?? '')
 
   // ── Insert order ──────────────────────────────────────────────────────────
   const orderNumber = generateOrderNumber()
@@ -99,7 +78,7 @@ export async function POST(req: NextRequest) {
         amountUsd:     baseUsd.toFixed(2),
         amountUsdt:    baseUsdt.toFixed(2),
         paymentMethod: data.paymentMethod,
-        walletAddress,
+        walletAddress: null,
         couponCode:    appliedCoupon,
         status:        'pending_payment',
       })

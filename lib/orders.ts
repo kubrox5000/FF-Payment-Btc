@@ -12,21 +12,7 @@ export const SERVERS = [
 ] as const
 
 export const PAYMENT_METHODS = [
-  { id: 'USDT_TRC20', label: 'USDT (TRC20)', network: 'Tron Network', icon: 'trc20', cat: 'crypto' },
-  { id: 'USDT_BEP20', label: 'USDT (BEP20)', network: 'BNB Smart Chain', icon: 'bep20', cat: 'crypto' },
-  { id: 'BINANCE_PAY', label: 'Binance Pay', network: 'Binance App', icon: 'binance', cat: 'wallet' },
-  { id: 'BTC', label: 'BTC', network: 'Bitcoin Network', icon: 'btc', cat: 'crypto' },
-  { id: 'ETH', label: 'ETH', network: 'Ethereum Network', icon: 'eth', cat: 'crypto' },
-  { id: 'BNB', label: 'BNB', network: 'BNB Smart Chain', icon: 'bnb', cat: 'crypto' },
-  { id: 'USDC', label: 'USDC', network: 'Ethereum Network', icon: 'usdc', cat: 'crypto' },
-  { id: 'SOL', label: 'SOL (Solana)', network: 'Solana Network', icon: 'sol', cat: 'crypto' },
-  { id: 'WISE', label: 'Wise', network: 'Wise Account', icon: 'wise', cat: 'wallet' },
-  { id: 'PAYONEER', label: 'Payoneer', network: 'Payoneer Account', icon: 'payoneer', cat: 'wallet' },
-  { id: 'SKRILL', label: 'Skrill', network: 'Skrill Account', icon: 'skrill', cat: 'wallet' },
-  { id: 'NETELLER', label: 'Neteller', network: 'Neteller Account', icon: 'neteller', cat: 'wallet' },
-  { id: 'REDOTPAY', label: 'RedotPay', network: 'RedotPay', icon: 'redotpay', cat: 'wallet' },
-  { id: 'BYBIT', label: 'Bybit', network: 'Bybit Account', icon: 'bybit', cat: 'wallet' },
-  { id: 'REVOLUT', label: 'Revolut', network: 'Revolut Account', icon: 'revolut', cat: 'wallet' },
+  { id: 'HELEKET', label: 'Heleket', network: 'Crypto checkout', icon: 'heleket', cat: 'crypto' },
 ] as const
 
 export type PaymentMethodId = (typeof PAYMENT_METHODS)[number]['id']
