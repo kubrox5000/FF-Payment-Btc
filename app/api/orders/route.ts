@@ -5,6 +5,7 @@ import { packages, orders, coupons, paymentMethods } from '@/db/schemas'
 import { eq, sql } from 'drizzle-orm'
 import { generateOrderNumber, discountedPrice } from '@/lib/orders'
 import { getSettings } from '@/lib/settings'
+import { HELEKET_KEY, isHeleketConfigured, createHeleketInvoice } from '@/lib/heleket'
 
 const createSchema = z.object({
   packageId: z.number().int().positive(),
@@ -79,10 +80,30 @@ export async function POST(req: NextRequest) {
     REVOLUT:     settingsData.paymentRevolut,
   }
 
-  const walletAddress = pmRows[0]?.walletAddress?.trim() || (WALLETS[data.paymentMethod] ?? '')
+  let walletAddress = pmRows[0]?.walletAddress?.trim() || (WALLETS[data.paymentMethod] ?? '')
+  const orderNumber = generateOrderNumber()
+
+  // ── Heleket: create a hosted invoice; its URL is the payment destination ──
+  let heleketUuid: string | null = null
+  if (data.paymentMethod === HELEKET_KEY) {
+    if (!isHeleketConfigured()) {
+      return NextResponse.json({ error: 'Heleket payments are not configured' }, { status: 503 })
+    }
+    try {
+      const invoice = await createHeleketInvoice({
+        orderNumber,
+        amountUsdt: baseUsdt.toFixed(2),
+        origin: req.nextUrl.origin,
+      })
+      walletAddress = invoice.url
+      heleketUuid = invoice.uuid
+    } catch (e) {
+      console.error('[heleket] invoice creation failed', e)
+      return NextResponse.json({ error: 'Could not create the payment invoice. Please try again.' }, { status: 502 })
+    }
+  }
 
   // ── Insert order ──────────────────────────────────────────────────────────
-  const orderNumber = generateOrderNumber()
   const inserted = (
     await db
       .insert(orders)
@@ -100,11 +121,12 @@ export async function POST(req: NextRequest) {
         amountUsdt:    baseUsdt.toFixed(2),
         paymentMethod: data.paymentMethod,
         walletAddress,
+        txId:          heleketUuid,
         couponCode:    appliedCoupon,
         status:        'pending_payment',
       })
       .returning()
   )[0]
 
-  return NextResponse.json({ order: inserted })
+  return NextResponse.json({ order: inserted, paymentUrl: heleketUuid ? walletAddress : null })
 }

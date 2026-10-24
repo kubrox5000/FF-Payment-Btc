@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Copy, Check, Clock, Upload, Loader2, ShieldCheck, ArrowRight, AlertTriangle, Wifi, Banknote, Send } from 'lucide-react'
+import { Copy, Check, Clock, Upload, Loader2, ShieldCheck, ArrowRight, AlertTriangle, Wifi, Banknote, Send, ExternalLink, CheckCircle2 } from 'lucide-react'
 import { PAYMENT_METHODS } from '@/lib/orders'
 import { CryptoIcon } from '@/components/site/CryptoIcon'
 import { useLocale } from '@/components/geo/GeoLocaleProvider'
@@ -113,6 +113,10 @@ export function PaymentClient({ order }: { order: PublicOrder }) {
   }
 
   const qrValue = order.walletAddress || ''
+
+  if (order.paymentMethod === 'HELEKET') {
+    return <HeleketPanel order={order} expired={expired} mins={mins} secs={secs} />
+  }
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
@@ -274,6 +278,89 @@ function Step({ icon, num, text }: { icon: React.ReactNode; num: string; text: s
         {num}
       </span>
       <p className="text-[10px] leading-snug text-muted-foreground">{text}</p>
+    </div>
+  )
+}
+function HeleketPanel({ order, expired, mins, secs }: { order: PublicOrder; expired: boolean; mins: number; secs: number }) {
+  const router = useRouter()
+  const { t } = useLocale()
+  const paid = ['paid', 'processing', 'completed'].includes(order.status)
+  const review = order.status === 'payment_review'
+  const cancelled = order.status === 'cancelled'
+
+  return (
+    <div className="mx-auto max-w-xl">
+      <div className="glass rounded-2xl border p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">{t('pay_order')}</p>
+            <p className="font-mono text-lg font-bold" translate="no">{order.orderNumber}</p>
+          </div>
+          {order.status === 'pending_payment' && (
+            <div
+              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${
+                expired ? 'border-rose-500/30 bg-rose-500/10 text-rose-300' : 'border-gold/30 bg-gold/10 text-gold'
+              }`}
+              translate="no"
+            >
+              <Clock className="h-4 w-4" />
+              {expired ? t('pay_expired') : `${mins}:${String(secs).padStart(2, '0')}`}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4">
+          <CryptoIcon id="HELEKET" className="h-10 w-10" />
+          <div className="flex-1">
+            <p className="text-sm font-bold">{t('pay_heleket_title')}</p>
+            <p className="text-xs text-muted-foreground">{t('pay_heleket_sub')}</p>
+          </div>
+          <code className="text-base font-bold text-gold" translate="no">
+            {parseFloat(order.amountUsdt).toFixed(2)} USDT
+          </code>
+        </div>
+
+        {paid ? (
+          <div className="mt-5 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>{t('pay_heleket_paid')}</p>
+          </div>
+        ) : review ? (
+          <div className="mt-5 rounded-lg border border-sky-500/30 bg-sky-500/10 p-4 text-sm text-sky-200">{t('pay_already')}</div>
+        ) : cancelled || expired || !order.walletAddress ? (
+          <div className="mt-5 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>{t('pay_heleket_expired')}</p>
+          </div>
+        ) : (
+          <>
+            <a
+              href={order.walletAddress}
+              className="btn-shimmer glow-primary mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+            >
+              <ExternalLink className="h-4 w-4" />
+              {t('pay_heleket_btn')}
+            </a>
+            <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+              {t('pay_heleket_note')}
+            </p>
+            <button
+              onClick={() => router.refresh()}
+              className="mt-3 w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
+            >
+              {t('pay_heleket_check')}
+            </button>
+          </>
+        )}
+
+        <button
+          onClick={() => router.push(`/track?q=${order.orderNumber}`)}
+          className="mt-3 w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
+        >
+          {t('pay_track')}
+        </button>
+      </div>
     </div>
   )
 }

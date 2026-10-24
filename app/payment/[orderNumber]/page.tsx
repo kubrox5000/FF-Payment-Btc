@@ -11,6 +11,7 @@ import { LocalizedTitle } from '@/components/geo/LocalizedTitle'
 import { getSettings } from '@/lib/settings'
 import type { PublicOrder } from '@/lib/types'
 import { localizedPageMetadata } from '@/lib/seo'
+import { syncHeleketOrder } from '@/lib/heleket'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,8 +23,10 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderN
   const { orderNumber } = await params
   const settings = await getSettings()
   if (!process.env.DATABASE_URL) notFound()
-  const row = (await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1))[0]
+  let row = (await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1))[0]
   if (!row) notFound()
+  // Heleket orders: refresh the status from the gateway in case the webhook is late.
+  row = await syncHeleketOrder(row).catch(() => row)
 
   const order = JSON.parse(JSON.stringify(row)) as PublicOrder
 
