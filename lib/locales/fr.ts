@@ -199,6 +199,13 @@ export const fr = {
   pay_submitted_toast: 'Paiement soumis! Nous vérifions votre transaction.',
   pay_track: 'Suivre cette commande',
   pay_alt: 'aperçu de la preuve',
+  pay_heleket_title: "Payer avec Heleket",
+  pay_heleket_sub: "Paiement crypto sécurisé — USDT, BTC, ETH, TRX et plus",
+  pay_heleket_btn: "Payer maintenant",
+  pay_heleket_note: "Vous serez redirigé vers la page de paiement sécurisée Heleket. Votre commande est confirmée automatiquement dès réception du paiement.",
+  pay_heleket_check: "J'ai payé — actualiser le statut",
+  pay_heleket_paid: "Paiement reçu ! Vos diamants sont en cours de livraison.",
+  pay_heleket_expired: "Cette facture a expiré. Veuillez créer une nouvelle commande.",
   err_tx: 'Entrez votre ID / hash de transaction',
   err_failed: 'Échec de la soumission',
 

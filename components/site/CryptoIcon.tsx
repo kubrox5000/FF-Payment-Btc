@@ -9,6 +9,13 @@ export function CryptoIcon({
   className?: string
 }) {
   switch (id) {
+    case 'HELEKET':
+      return (
+        <svg viewBox="0 0 32 32" className={className} aria-label="Heleket">
+          <circle fill="#6C47FF" cx="16" cy="16" r="16" />
+          <path fill="#FFF" d="M10 8h3.6v6.2h4.8V8H22v16h-3.6v-6.4h-4.8V24H10z" />
+        </svg>
+      )
     case 'BTC':
       return (
         <svg viewBox="0 0 32 32" className={className} aria-label="BTC">

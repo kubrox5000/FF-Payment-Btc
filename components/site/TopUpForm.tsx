@@ -171,6 +171,10 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create order')
       toast.success(t('order_created'))
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl
+        return
+      }
       router.push(`/payment/${data.order.orderNumber}`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t('err_generic'))

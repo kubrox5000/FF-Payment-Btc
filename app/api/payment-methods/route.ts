@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { db } from '@/db'
 import { paymentMethods } from '@/db/schemas'
 import { eq, asc } from 'drizzle-orm'
+import { withHeleket } from '@/lib/heleket'
+import type { PublicPaymentMethod } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +15,7 @@ export async function GET() {
     .where(eq(paymentMethods.active, true))
     .orderBy(asc(paymentMethods.sortOrder))
   return NextResponse.json({
-    methods: rows.map((m) => ({
+    methods: withHeleket(rows as unknown as PublicPaymentMethod[]).map((m) => ({
       key: m.key,
       label: m.label,
       network: m.network,
