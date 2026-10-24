@@ -1,9 +1,6 @@
 import 'server-only'
-import { db } from '@/db'
-import { settings } from '@/db/schemas'
-import { eq, sql } from 'drizzle-orm'
 import { unstable_cache, revalidateTag as _revalidateTag } from 'next/cache'
-const revalidateTag = (tag: string) => (_revalidateTag as (tag: string, ...args: unknown[]) => undefined)(tag)
+const revalidateTag = (tag: string) => _revalidateTag(tag, { expire: 0 })
 import postgres from 'postgres'
 import { detectSsl } from '@/lib/db-ssl'
 
@@ -29,6 +26,7 @@ export interface SiteSettings {
   whatsapp: string
   telegram: string
   discord: string
+  heleketEnabled: boolean
   maintenance: boolean
   announcementAr: string
   announcementEn: string
@@ -73,6 +71,7 @@ const DEFAULTS: SiteSettings = {
   whatsapp: '',
   telegram: '',
   discord: '',
+  heleketEnabled: true,
   maintenance: false,
   announcementAr: 'خصم يصل إلى 30% على باقات الماس المميزة',
   announcementEn: 'Up to 30% OFF on premium diamond packages',
@@ -165,5 +164,19 @@ export async function saveSettings(data: Partial<SiteSettings>): Promise<SiteSet
     throw err
   } finally {
     try { await rawSql.end() } catch { /* ignore */ }
+  }
+}
+
+// Payment availability must bypass the display cache so a saved disable takes
+// effect on the next checkout request. Database failures must not enable it.
+export async function getHeleketEnabled(): Promise<boolean> {
+  const rawSql = getRawSql()
+  try {
+    const rows = await rawSql`SELECT data::text as raw FROM settings WHERE id = 1`
+    if (!rows.length) return DEFAULTS.heleketEnabled
+    const stored = parseSettingsRaw(rows[0].raw)
+    return stored.heleketEnabled === undefined ? DEFAULTS.heleketEnabled : stored.heleketEnabled === true
+  } finally {
+    await rawSql.end()
   }
 }

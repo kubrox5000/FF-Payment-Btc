@@ -3,6 +3,8 @@ import crypto from 'node:crypto'
 import { db } from '@/db'
 import { orders, type Order } from '@/db/schemas'
 import { eq } from 'drizzle-orm'
+import { getHeleketEnabled } from '@/lib/settings'
+import { applyHeleketAvailability } from '@/lib/heleket-policy'
 import type { PublicPaymentMethod } from '@/lib/types'
 
 // Heleket crypto payment gateway (https://doc.heleket.com).
@@ -126,22 +128,11 @@ export async function syncHeleketOrder(order: Order): Promise<Order> {
   return updated ?? order
 }
 
-// Add Heleket to the store's payment methods when configured and not already
-// managed from the admin payment-methods table.
-export function withHeleket(methods: PublicPaymentMethod[]): PublicPaymentMethod[] {
-  if (!isHeleketConfigured() || methods.some((m) => m.key === HELEKET_KEY)) return methods
-  return [
-    {
-      id: 0,
-      key: HELEKET_KEY,
-      label: 'Heleket',
-      network: 'USDT · BTC · ETH · TRX…',
-      cat: 'crypto',
-      icon: 'heleket',
-      walletAddress: '',
-      active: true,
-      sortOrder: -1,
-    },
-    ...methods,
-  ]
+// Resolve availability afresh; disable wins even over an existing payment row.
+export async function withHeleket(methods: PublicPaymentMethod[]): Promise<PublicPaymentMethod[]> {
+  let enabled = false
+  if (isHeleketConfigured()) {
+    try { enabled = await getHeleketEnabled() } catch { /* fail closed */ }
+  }
+  return applyHeleketAvailability(methods, enabled)
 }

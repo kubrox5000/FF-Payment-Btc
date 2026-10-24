@@ -29,6 +29,10 @@ export async function PUT(req: NextRequest) {
   for (const key of STRING_FIELDS) {
     if (typeof body[key] === 'string') patch[key] = body[key]
   }
+  if ('heleketEnabled' in body && typeof body.heleketEnabled !== 'boolean') {
+    return NextResponse.json({ error: 'heleketEnabled must be a boolean' }, { status: 400 })
+  }
+  if (typeof body.heleketEnabled === 'boolean') patch.heleketEnabled = body.heleketEnabled
   if (typeof body.maintenance === 'boolean') patch.maintenance = body.maintenance
 
   try {
@@ -50,6 +54,10 @@ export async function PATCH(req: NextRequest) {
   for (const key of STRING_FIELDS) {
     if (typeof body[key] === 'string') patch[key] = body[key]
   }
+  if ('heleketEnabled' in body && typeof body.heleketEnabled !== 'boolean') {
+    return NextResponse.json({ error: 'heleketEnabled must be a boolean' }, { status: 400 })
+  }
+  if (typeof body.heleketEnabled === 'boolean') patch.heleketEnabled = body.heleketEnabled
   if (typeof body.maintenance === 'boolean') patch.maintenance = body.maintenance
 
   try {

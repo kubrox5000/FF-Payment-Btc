@@ -15,7 +15,7 @@ export async function GET() {
     .where(eq(paymentMethods.active, true))
     .orderBy(asc(paymentMethods.sortOrder))
   return NextResponse.json({
-    methods: withHeleket(rows as unknown as PublicPaymentMethod[]).map((m) => ({
+    methods: (await withHeleket(rows as unknown as PublicPaymentMethod[])).map((m) => ({
       key: m.key,
       label: m.label,
       network: m.network,

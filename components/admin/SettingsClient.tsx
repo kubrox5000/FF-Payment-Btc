@@ -35,6 +35,7 @@ export function SettingsClient() {
           announcementAr: s.announcementAr, announcementEn: s.announcementEn,
           announcementFr: s.announcementFr, announcementEs: s.announcementEs,
           maintenance: s.maintenance,
+          heleketEnabled: s.heleketEnabled,
           supportEmail: s.supportEmail, phone: s.phone, address: s.address, hours: s.hours, whatsapp: s.whatsapp,
           telegram: s.telegram, discord: s.discord,
           instagram: s.instagram, facebook: s.facebook, twitter: s.twitter, youtube: s.youtube, tiktok: s.tiktok,
@@ -151,6 +152,17 @@ export function SettingsClient() {
             <Text label="Announcement Banner — Spanish" value={str(draft.announcementEs)} onChange={(v) => set('announcementEs', v)} />
           </div>
           <Toggle label="Maintenance mode" checked={bool(draft.maintenance)} onChange={(v) => set('maintenance', v)} />
+        </div>
+      </Section>
+
+      <Section icon={<Coins className="h-4 w-4 text-gold" />} title="Heleket Payment Gateway">
+        <div className="space-y-3" dir="rtl">
+          <Toggle label="تفعيل بوابة الدفع Heleket" checked={bool(draft.heleketEnabled)} onChange={(v) => set('heleketEnabled', v)} />
+          <p className="text-sm font-medium">{bool(draft.heleketEnabled) ? 'مفعّلة في الإعدادات' : 'معطّلة للطلبات الجديدة'}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            عند التعطيل تختفي البوابة من خيارات الدفع ويُمنع إنشاء فواتير جديدة. تستمر متابعة المدفوعات السابقة.
+            يتطلب ظهور البوابة إعداد معرّف التاجر ومفتاح API في Netlify. اضغط Save Settings لتطبيق التغيير.
+          </p>
         </div>
       </Section>
 
@@ -278,10 +290,10 @@ function Text({ label, value, onChange, placeholder, mono }: { label: string; va
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button type="button" onClick={() => onChange(!checked)} className="flex items-center justify-between rounded-lg border px-3 py-2.5 text-xs font-medium">
+    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className="flex items-center justify-between rounded-lg border px-3 py-2.5 text-xs font-medium">
       <span>{label}</span>
       <span className={`h-4 w-8 rounded-full p-0.5 transition-colors ${checked ? 'bg-primary' : 'bg-secondary'}`}>
-        <span className={`block h-3 w-3 rounded-full bg-white transition-transform ${checked ? 'translate-x-4' : ''}`} />
+        <span className={`block h-3 w-3 rounded-full bg-white transition-transform ${checked ? 'translate-x-4 rtl:-translate-x-4' : ''}`} />
       </span>
     </button>
   )
