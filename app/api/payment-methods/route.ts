@@ -21,7 +21,7 @@ export async function GET() {
       .where(eq(paymentMethods.active, true))
       .orderBy(asc(paymentMethods.sortOrder))
     return NextResponse.json({
-      methods: withAtlos(withHeleket(rows as unknown as PublicPaymentMethod[])).map((m) => ({
+      methods: (await withAtlos(withHeleket(rows as unknown as PublicPaymentMethod[]))).map((m) => ({
         key: m.key,
         label: m.label,
         network: m.network,
@@ -31,7 +31,7 @@ export async function GET() {
     })
   } catch {
     return NextResponse.json({
-      methods: withAtlos(withHeleket(SEED_PAYMENT_METHODS)).map((m) => ({
+      methods: (await withAtlos(withHeleket(SEED_PAYMENT_METHODS))).map((m) => ({
         key: m.key,
         label: m.label,
         network: m.network,

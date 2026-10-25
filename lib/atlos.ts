@@ -6,6 +6,7 @@ import { db } from '@/db'
 import { orders, type Order } from '@/db/schemas'
 import { eq } from 'drizzle-orm'
 import type { PublicPaymentMethod } from '@/lib/types'
+import { getSettings } from '@/lib/settings'
 
 // Atlos.io crypto payment gateway (https://atlos.io).
 // Requires ATLOS_MERCHANT_ID (or NEXT_PUBLIC_ATLOS_MERCHANT_ID) and optional ATLOS_API_SECRET.
@@ -17,7 +18,7 @@ export interface AtlosCredentials {
   apiSecret?: string
 }
 
-export function getAtlosCredentials(): AtlosCredentials {
+export async function getAtlosCredentials(): Promise<AtlosCredentials> {
   let merchantId =
     process.env.ATLOS_MERCHANT_ID?.trim() ||
     process.env.NEXT_PUBLIC_ATLOS_MERCHANT_ID?.trim()
@@ -40,21 +41,25 @@ export function getAtlosCredentials(): AtlosCredentials {
     }
   }
 
-  return { merchantId, apiSecret }
+  const settings = await getSettings()
+  return {
+    merchantId: merchantId || settings.atlosMerchantId?.trim() || undefined,
+    apiSecret: apiSecret || settings.atlosApiSecret?.trim() || undefined,
+  }
 }
 
-export function isAtlosConfigured(): boolean {
-  const { merchantId } = getAtlosCredentials()
+export async function isAtlosConfigured(): Promise<boolean> {
+  const { merchantId } = await getAtlosCredentials()
   return Boolean(merchantId)
 }
 
 // Verify Atlos webhook signature if ATLOS_API_SECRET is configured
-export function verifyAtlosWebhook(
+export async function verifyAtlosWebhook(
   rawBody: string,
   signatureHeader?: string | null,
   timestampHeader?: string | null,
-): boolean {
-  const { apiSecret } = getAtlosCredentials()
+): Promise<boolean> {
+  const { apiSecret } = await getAtlosCredentials()
   if (!apiSecret) {
     // If no secret configured, accept webhook
     return true
@@ -106,8 +111,8 @@ export async function markAtlosOrderPaid(orderNumber: string, txId?: string): Pr
 }
 
 // Add Atlos to the store's payment methods when configured
-export function withAtlos(methods: PublicPaymentMethod[]): PublicPaymentMethod[] {
-  if (!isAtlosConfigured() || methods.some((m) => m.key === ATLOS_KEY)) return methods
+export async function withAtlos(methods: PublicPaymentMethod[]): Promise<PublicPaymentMethod[]> {
+  if (!(await isAtlosConfigured()) || methods.some((m) => m.key === ATLOS_KEY)) return methods
   return [
     {
       id: 0,
