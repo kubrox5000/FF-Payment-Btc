@@ -49,6 +49,7 @@ export const ar = {
 
   // Home sections
   home_packages_kicker: 'باقات الماس',
+  no_pkgs: 'لا توجد باقات متوفرة حالياً. يرجى العودة لاحقاً.',
   home_packages_title: 'اختر باقتك',
   home_packages_sub: 'شحن فوري لأي حساب فري فاير. ماس إضافي مشمول في الباقات المحددة.',
   home_popular_kicker: '🔥 الأكثر طلبًا الآن',

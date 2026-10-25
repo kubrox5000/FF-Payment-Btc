@@ -37,26 +37,27 @@ function PackageCardBase({ pkg, selected, onSelect, ctaLabel, freeGift }: Props)
   const baseTotal = pkg.diamonds + pkg.bonusDiamonds
   const total = xMultiplier > 0 ? baseTotal * xMultiplier : baseTotal
 
+  const Card = onSelect ? 'button' : 'div'
+
   return (
-    <button
-      type="button"
-      onClick={() => onSelect?.(pkg)}
+    <Card
+      {...(onSelect ? { type: 'button' as const, onClick: () => onSelect(pkg), 'aria-pressed': Boolean(selected) } : {})}
       className={cn(
-        'group relative flex w-full flex-col overflow-hidden rounded-2xl border p-4 sm:p-5 text-left transition-all duration-150',
-        'hover:-translate-y-1 active:scale-[0.98]',
+        'group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border p-3.5 text-start transition-[transform,border-color,background-color] duration-150 sm:p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'motion-safe:hover:-translate-y-1',
         'bg-card/90',
         selected
-          ? 'border-primary glow-primary'
+          ? 'border-primary bg-primary/5'
           : 'border-border hover:border-primary/60',
       )}
     >
       {(pkg.popular || pkg.flashSale) && (
         <span
           className={cn(
-            'absolute right-3 top-3 flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide',
+            'mb-4 self-start flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide',
             pkg.flashSale
               ? 'bg-gold text-gold-foreground'
-              : 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg shadow-orange-500/30',
+              : 'bg-primary/10 text-primary',
           )}
         >
           {pkg.flashSale ? <Flame className="h-3 w-3" /> : <Trophy className="h-3 w-3" />}
@@ -64,14 +65,14 @@ function PackageCardBase({ pkg, selected, onSelect, ctaLabel, freeGift }: Props)
         </span>
       )}
 
-      <div className="mb-4 flex items-center gap-3">
-        <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-sky-500/30 to-violet-500/30 ring-1 ring-inset ring-white/10">
-          <Gem className="h-6 w-6 text-sky-300" />
+      <div className="mb-4 flex flex-wrap items-center gap-2.5">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-primary/15 bg-primary/5 sm:h-12 sm:w-12">
+          <Gem className="h-5 w-5 text-primary" />
         </span>
         <div>
           <div className="flex items-baseline gap-1.5" translate="no">
-            <span className="text-2xl font-extrabold">{formatNumber(pkg.diamonds)}</span>
-            <span className="text-sm font-medium text-muted-foreground">💎</span>
+            <span className="text-xl font-bold sm:text-2xl">{formatNumber(pkg.diamonds)}</span>
+            <Gem className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           </div>
           {pkg.bonusDiamonds > 0 && (
             <div className="mt-0.5 flex items-center gap-1" translate="no">
@@ -84,8 +85,8 @@ function PackageCardBase({ pkg, selected, onSelect, ctaLabel, freeGift }: Props)
         </div>
       </div>
 
-      <div className="mb-1 flex items-baseline gap-2" translate="no">
-        <span className="text-2xl font-extrabold text-gold">
+      <div className="mb-1 flex flex-wrap items-baseline gap-2" translate="no">
+        <span className="text-xl font-bold sm:text-2xl text-gold">
           {formatPrice(finalUsd)}
         </span>
         {hasDiscount && (
@@ -135,13 +136,13 @@ function PackageCardBase({ pkg, selected, onSelect, ctaLabel, freeGift }: Props)
 
       <span
         className={cn(
-          'btn-shimmer mt-5 rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-white transition-opacity',
+          'mt-5 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2.5 text-center text-sm font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground',
           selected ? 'opacity-100' : 'opacity-90 group-hover:opacity-100',
         )}
       >
         {selected ? t('pkg_selected') : (ctaLabel ?? t('pkg_topup'))}
       </span>
-    </button>
+    </Card>
   )
 }
 

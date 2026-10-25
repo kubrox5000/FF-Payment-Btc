@@ -49,6 +49,7 @@ export const fr = {
 
   // Home sections
   home_packages_kicker: 'Packs de diamants',
+  no_pkgs: 'Aucun pack disponible actuellement. Revenez bientôt.',
   home_packages_title: 'Choisissez votre pack',
   home_packages_sub: 'Recharge instantanée pour tout compte Free Fire. Diamants bonus inclus sur certains packs.',
   home_popular_kicker: '🔥 Les plus demandés',

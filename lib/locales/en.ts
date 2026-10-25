@@ -49,6 +49,7 @@ export const en = {
 
   // Home sections
   home_packages_kicker: 'Diamond Packages',
+  no_pkgs: 'Packages are currently unavailable. Please check back soon.',
   home_packages_title: 'Choose Your Pack',
   home_packages_sub: 'Instant top-up for any Free Fire account. Bonus diamonds included on select packs.',
   home_popular_kicker: '🔥 Most Requested',
