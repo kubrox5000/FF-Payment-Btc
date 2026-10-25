@@ -46,6 +46,8 @@ export interface SiteSettings {
   snapchatPixelId: string
   telegramBotToken: string
   telegramChatId: string
+  atlosMerchantId: string
+  atlosApiSecret: string
 }
 
 const DEFAULTS: SiteSettings = {
@@ -90,6 +92,8 @@ const DEFAULTS: SiteSettings = {
   snapchatPixelId: '',
   telegramBotToken: '',
   telegramChatId: '',
+  atlosMerchantId: '',
+  atlosApiSecret: '',
 }
 
 function getRawSql() {

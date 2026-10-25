@@ -46,25 +46,36 @@ interface State {
 }
 
 async function detectCountryCode(): Promise<string | undefined> {
-  const sources = ['https://ipapi.co/json/', 'https://ipwho.is/']
-  for (const url of sources) {
+  const sources = [
+    { url: 'https://ipwho.is/', parse: (j: Record<string, unknown>) => j.country_code },
+    { url: 'https://freeipapi.com/api/json', parse: (j: Record<string, unknown>) => j.countryCode },
+    { url: 'https://ipapi.co/json/', parse: (j: Record<string, unknown>) => j.country_code },
+  ]
+  for (const s of sources) {
     try {
       const ctrl = new AbortController()
-      const timer = setTimeout(() => ctrl.abort(), 3000)
-      const res = await fetch(url, { signal: ctrl.signal })
+      const timer = setTimeout(() => ctrl.abort(), 2500)
+      const res = await fetch(s.url, { signal: ctrl.signal })
       clearTimeout(timer)
       if (!res.ok) continue
-      const json = (await res.json()) as { country_code?: string; countryCode?: string }
-      const code = (json.country_code ?? json.countryCode ?? '').toUpperCase()
-      if (code) return code
+      const json = (await res.json()) as Record<string, unknown>
+      const code = String(s.parse(json) ?? '').toUpperCase()
+      if (code && code.length === 2) return code
     } catch {
       // try next source
     }
   }
-  // Fallback: infer from the browser language tag, e.g. 'ar-MA' → 'MA'.
-  const locale = (typeof navigator !== 'undefined' ? navigator.language : '') || ''
-  const parts = locale.toUpperCase().split('-')
-  if (parts.length > 1) return parts[1]
+  // Fallback: infer from browser language tags, e.g. 'ar-EG' → 'EG', 'fr-FR' → 'FR'.
+  if (typeof navigator !== 'undefined') {
+    const list = navigator.languages?.length ? navigator.languages : [navigator.language]
+    for (const l of list) {
+      if (!l) continue
+      const parts = l.split(/[-_]/)
+      if (parts.length > 1 && parts[1].length === 2) {
+        return parts[1].toUpperCase()
+      }
+    }
+  }
   return undefined
 }
 
@@ -89,9 +100,7 @@ export function GeoLocaleProvider({
     document.documentElement.setAttribute('dir', dirOf(state.lang))
   }, [state.lang])
 
-  // Apply a stored override and refine the country/currency. First paint is
-  // already correct (server-seeded); then an instant timezone check flips the
-  // language, and a background IP lookup refines the currency further.
+  // Apply a stored override and refine the country/currency automatically.
   useEffect(() => {
     let cancelled = false
 
@@ -109,23 +118,29 @@ export function GeoLocaleProvider({
       setState((s) => ({ ...s, lang: override ?? lang, currency, countryCode }))
     }
 
-    // Instant, network-free signal: the browser timezone (e.g. Africa/Casablanca → MA).
-    // This reflects the visitor's real physical location, so it is authoritative.
+    const browserLang = typeof navigator !== 'undefined' ? navigator.language : undefined
+
+    // 1. Instant check from timezone (0ms)
     const tz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
     const tzCountry = countryFromTimezone(tz)
 
     if (tzCountry) {
-      const base = localeForCountry(tzCountry)
+      const base = localeForCountry(tzCountry, browserLang)
       setLocale(base.lang, base.currency, tzCountry)
-    } else {
-      // Background: only refine via IP lookup when the timezone gives no country.
-      void (async () => {
-        const countryCode = await detectCountryCode()
-        if (!countryCode) return
-        const base = localeForCountry(countryCode)
-        setLocale(base.lang, base.currency, countryCode)
-      })()
     }
+
+    // 2. Refine via IP lookup in background
+    void (async () => {
+      const countryCode = await detectCountryCode()
+      if (!countryCode || cancelled) return
+      const base = localeForCountry(countryCode, browserLang)
+      setLocale(base.lang, base.currency, countryCode)
+      try {
+        document.cookie = `ff_country=${countryCode}; path=/; max-age=2592000; samesite=lax`
+      } catch {
+        // ignore
+      }
+    })()
 
     return () => {
       cancelled = true

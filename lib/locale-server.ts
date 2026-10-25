@@ -23,18 +23,39 @@ export async function resolveServerLocale(): Promise<ServerLocale> {
       ? (override as Lang)
       : undefined
 
-  // 2. Country: prefer the geo cookie (set by middleware from Cloudflare geo),
-  //    then fall back to the region in the Accept-Language header, e.g. "ar-SA" → SA.
-  let country = c.get(COUNTRY_COOKIE)?.value
+  // 2. Country: prefer geo cookie, then CDN/Cloud geo headers, then Accept-Language header
+  let country =
+    c.get(COUNTRY_COOKIE)?.value ||
+    h.get('cf-ipcountry') ||
+    h.get('x-vercel-ip-country') ||
+    h.get('x-appengine-country') ||
+    h.get('x-country-code') ||
+    undefined
+
+  const acceptLanguage = h.get('accept-language') ?? ''
+  let browserLang: Lang | undefined
+
   if (!country) {
-    const acceptLanguage = h.get('accept-language') ?? ''
-    const m = acceptLanguage.match(/(?:^|,)\s*([a-z]{2})-([A-Z]{2})/i)
-    if (m) country = m[2].toUpperCase()
+    const m = acceptLanguage.match(/(?:^|,)\s*([a-z]{2})(?:-([A-Z]{2}))?/i)
+    if (m && m[2]) {
+      country = m[2].toUpperCase()
+    }
   }
+
+  // Detect preferred browser language among supported (ar, en, fr, es)
+  const langMatch = acceptLanguage.match(/(?:^|,)\s*(ar|en|fr|es)\b/i)
+  if (langMatch) {
+    browserLang = langMatch[1].toLowerCase() as Lang
+  }
+
   if (country) country = country.toUpperCase()
 
-  // Default to Arabic + SAR when the country is unknown.
-  const base = country ? localeForCountry(country) : FALLBACK_LOCALE
+  const base = country
+    ? localeForCountry(country, browserLang)
+    : browserLang
+    ? { lang: browserLang, currency: browserLang === 'ar' ? 'SAR' : browserLang === 'fr' ? 'EUR' : 'USD' }
+    : FALLBACK_LOCALE
+
   const lang: Lang = storedLang ?? base.lang
 
   return { lang, currency: base.currency, countryCode: country }

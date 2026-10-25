@@ -6,6 +6,7 @@ import { eq, sql } from 'drizzle-orm'
 import { generateOrderNumber, discountedPrice } from '@/lib/orders'
 import { getSettings } from '@/lib/settings'
 import { HELEKET_KEY, isHeleketConfigured, createHeleketInvoice } from '@/lib/heleket'
+import { ATLOS_KEY } from '@/lib/atlos'
 
 const createSchema = z.object({
   packageId: z.number().int().positive(),
@@ -101,6 +102,11 @@ export async function POST(req: NextRequest) {
       console.error('[heleket] invoice creation failed', e)
       return NextResponse.json({ error: 'Could not create the payment invoice. Please try again.' }, { status: 502 })
     }
+  }
+
+  // ── Atlos: payments are processed via Atlos checkout widget ──
+  if (data.paymentMethod === ATLOS_KEY) {
+    walletAddress = 'ATLOS_CHECKOUT'
   }
 
   // ── Insert order ──────────────────────────────────────────────────────────

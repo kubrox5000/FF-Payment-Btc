@@ -14,6 +14,7 @@ import { SEED_PACKAGES, SEED_PAYMENT_METHODS } from '@/lib/seed-data'
 import type { PublicPackage, PublicPaymentMethod } from '@/lib/types'
 import { localizedPageMetadata } from '@/lib/seo'
 import { withHeleket } from '@/lib/heleket'
+import { withAtlos } from '@/lib/atlos'
 import { isDatabaseConfigured } from '@/lib/db-ssl'
 
 export const dynamic = 'force-dynamic'
@@ -50,7 +51,7 @@ export default async function TopUpPage() {
         <OfficialBannerSection />
 
         <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-secondary/40" />}>
-          <TopUpForm packages={pkgRows} paymentMethods={withHeleket(methods)} freeGift={settings.freeGift} />
+          <TopUpForm packages={pkgRows} paymentMethods={withAtlos(withHeleket(methods))} freeGift={settings.freeGift} />
         </Suspense>
       </main>
       <SiteFooter settings={settings} />

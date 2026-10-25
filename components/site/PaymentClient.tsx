@@ -118,6 +118,10 @@ export function PaymentClient({ order }: { order: PublicOrder }) {
     return <HeleketPanel order={order} expired={expired} mins={mins} secs={secs} />
   }
 
+  if (order.paymentMethod === 'ATLOS') {
+    return <AtlosPanel order={order} expired={expired} mins={mins} secs={secs} />
+  }
+
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
       {/* Left: payment instructions */}
@@ -350,6 +354,142 @@ function HeleketPanel({ order, expired, mins, secs }: { order: PublicOrder; expi
               className="mt-3 w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
             >
               {t('pay_heleket_check')}
+            </button>
+          </>
+        )}
+
+        <button
+          onClick={() => router.push(`/track?q=${order.orderNumber}`)}
+          className="mt-3 w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
+        >
+          {t('pay_track')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function AtlosPanel({ order, expired, mins, secs }: { order: PublicOrder; expired: boolean; mins: number; secs: number }) {
+  const router = useRouter()
+  const { t } = useLocale()
+  const paid = ['paid', 'processing', 'completed'].includes(order.status)
+  const review = order.status === 'payment_review'
+  const cancelled = order.status === 'cancelled'
+  const [atlosMerchantId, setAtlosMerchantId] = useState<string | null>(null)
+  const [loadingConfig, setLoadingConfig] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/atlos/config')
+      .then((r) => r.json())
+      .then((d: { merchantId: string | null }) => {
+        if (d.merchantId) setAtlosMerchantId(d.merchantId)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingConfig(false))
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if ((window as unknown as { atlos?: unknown }).atlos) return
+    const script = document.createElement('script')
+    script.src = 'https://atlos.io/packages/app/atlos.js'
+    script.async = true
+    document.body.appendChild(script)
+  }, [])
+
+  function launchPayment() {
+    if (!atlosMerchantId) {
+      toast.error('Atlos Merchant ID is not configured yet. Please configure it in .env or Admin settings.')
+      return
+    }
+    const atlos = (window as unknown as { atlos?: { Pay: (opts: Record<string, unknown>) => void } }).atlos
+    if (!atlos) {
+      toast.error('Loading Atlos gateway... Please try again in a moment.')
+      return
+    }
+    atlos.Pay({
+      merchantId: atlosMerchantId,
+      orderId: order.orderNumber,
+      orderAmount: Number(order.amountUsd),
+      orderCurrency: 'USD',
+      userEmail: order.email || undefined,
+      onSuccess: () => {
+        toast.success('Payment received successfully!')
+        router.refresh()
+      },
+      onCompleted: () => {
+        toast.success('Payment completed!')
+        router.refresh()
+      },
+      onCanceled: () => {
+        toast.info('Payment window closed.')
+      },
+    })
+  }
+
+  return (
+    <div className="mx-auto max-w-xl">
+      <div className="glass rounded-2xl border p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">{t('pay_order')}</p>
+            <p className="font-mono text-lg font-bold" translate="no">{order.orderNumber}</p>
+          </div>
+          {order.status === 'pending_payment' && (
+            <div
+              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${
+                expired ? 'border-rose-500/30 bg-rose-500/10 text-rose-300' : 'border-gold/30 bg-gold/10 text-gold'
+              }`}
+              translate="no"
+            >
+              <Clock className="h-4 w-4" />
+              {expired ? t('pay_expired') : `${mins}:${String(secs).padStart(2, '0')}`}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4">
+          <CryptoIcon id="ATLOS" className="h-10 w-10 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold">Atlos Crypto Gateway</p>
+            <p className="text-xs text-muted-foreground">USDT, BTC, ETH, SOL, LTC, etc.</p>
+          </div>
+          <code className="text-base font-bold text-sky-400" translate="no">
+            ${parseFloat(order.amountUsd).toFixed(2)} USD
+          </code>
+        </div>
+
+        {paid ? (
+          <div className="mt-5 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>Payment confirmed! Your diamonds will be delivered within minutes.</p>
+          </div>
+        ) : review ? (
+          <div className="mt-5 rounded-lg border border-sky-500/30 bg-sky-500/10 p-4 text-sm text-sky-200">{t('pay_already')}</div>
+        ) : cancelled || expired ? (
+          <div className="mt-5 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>{t('pay_heleket_expired')}</p>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={launchPayment}
+              disabled={loadingConfig}
+              className="btn-shimmer glow-primary mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-primary px-4 py-3.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-50"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Pay with Atlos (Crypto) ⚡
+            </button>
+            <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+              Secure, non-custodial crypto checkout with real-time confirmation.
+            </p>
+            <button
+              onClick={() => router.refresh()}
+              className="mt-3 w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
+            >
+              Check Payment Status
             </button>
           </>
         )}

@@ -12,6 +12,7 @@ const STRING_FIELDS = [
   'twitter', 'youtube', 'tiktok', 'facebookPixelId',
   'googleAdsPixelId', 'tiktokPixelId', 'snapchatPixelId',
   'telegramBotToken', 'telegramChatId',
+  'atlosMerchantId', 'atlosApiSecret',
 ] as const
 
 export async function GET() {

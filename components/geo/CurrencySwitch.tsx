@@ -15,13 +15,28 @@ interface CurrencyOption {
 const CURRENCIES: CurrencyOption[] = [
   { code: 'USD', symbol: '$',    flag: '🇺🇸', label: 'US Dollar' },
   { code: 'EUR', symbol: '€',    flag: '🇪🇺', label: 'Euro' },
-  { code: 'GBP', symbol: '£',    flag: '🇬🇧', label: 'Pound' },
+  { code: 'GBP', symbol: '£',    flag: '🇬🇧', label: 'British Pound' },
   { code: 'SAR', symbol: 'ر.س', flag: '🇸🇦', label: 'Saudi Riyal' },
   { code: 'AED', symbol: 'د.إ', flag: '🇦🇪', label: 'Emirates Dirham' },
+  { code: 'EGP', symbol: 'ج.م', flag: '🇪🇬', label: 'Egyptian Pound' },
+  { code: 'MAD', symbol: 'د.م', flag: '🇲🇦', label: 'Moroccan Dirham' },
+  { code: 'DZD', symbol: 'د.ج', flag: '🇩🇿', label: 'Algerian Dinar' },
+  { code: 'TND', symbol: 'د.ت', flag: '🇹🇳', label: 'Tunisian Dinar' },
+  { code: 'IQD', symbol: 'د.ع', flag: '🇮🇶', label: 'Iraqi Dinar' },
   { code: 'KWD', symbol: 'د.ك', flag: '🇰🇼', label: 'Kuwaiti Dinar' },
   { code: 'QAR', symbol: 'ر.ق', flag: '🇶🇦', label: 'Qatari Riyal' },
   { code: 'BHD', symbol: 'د.ب', flag: '🇧🇭', label: 'Bahrain Dinar' },
   { code: 'OMR', symbol: 'ر.ع', flag: '🇴🇲', label: 'Omani Rial' },
+  { code: 'JOD', symbol: 'د.أ', flag: '🇯🇴', label: 'Jordanian Dinar' },
+  { code: 'LYD', symbol: 'د.ل', flag: '🇱🇾', label: 'Libyan Dinar' },
+  { code: 'CAD', symbol: 'C$',   flag: '🇨🇦', label: 'Canadian Dollar' },
+  { code: 'AUD', symbol: 'A$',   flag: '🇦🇺', label: 'Australian Dollar' },
+  { code: 'BRL', symbol: 'R$',   flag: '🇧🇷', label: 'Brazilian Real' },
+  { code: 'MXN', symbol: 'Mex$', flag: '🇲🇽', label: 'Mexican Peso' },
+  { code: 'TRY', symbol: '₺',    flag: '🇹🇷', label: 'Turkish Lira' },
+  { code: 'INR', symbol: '₹',    flag: '🇮🇳', label: 'Indian Rupee' },
+  { code: 'PKR', symbol: '₨',    flag: '🇵🇰', label: 'Pakistani Rupee' },
+  { code: 'IDR', symbol: 'Rp',   flag: '🇮🇩', label: 'Indonesian Rupiah' },
 ]
 
 export function CurrencySwitch({ className }: { className?: string }) {
@@ -63,7 +78,7 @@ export function CurrencySwitch({ className }: { className?: string }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-56 max-h-72 overflow-y-auto rounded-xl border border-border bg-card shadow-xl divide-y divide-border/40">
           {CURRENCIES.map((c) => (
             <button
               key={c.code}

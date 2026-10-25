@@ -9,6 +9,14 @@ export function CryptoIcon({
   className?: string
 }) {
   switch (id) {
+    case 'ATLOS':
+      return (
+        <svg viewBox="0 0 32 32" className={className} aria-label="Atlos">
+          <circle fill="#0F172A" cx="16" cy="16" r="16" />
+          <path fill="#38BDF8" d="M16 6l8 14h-5.2l-2.8-5.3-2.8 5.3H8L16 6z" />
+          <circle fill="#38BDF8" cx="16" cy="23.5" r="2" />
+        </svg>
+      )
     case 'HELEKET':
       return (
         <svg viewBox="0 0 32 32" className={className} aria-label="Heleket">

@@ -1,11 +1,15 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Tag the visitor's country from the edge geo data (Cloudflare Workers / Vercel)
-// into a cookie, so server components can pick the correct locale immediately
-// without waiting for a client-side IP lookup.
+// Tag the visitor's country from edge/cloud geo headers into a cookie,
+// so server components can pick the correct locale and currency immediately.
 export function middleware(request: NextRequest) {
-  // Cloudflare Workers expose the visitor's country as the "cf-ipcountry" header.
-  const country = request.headers.get('cf-ipcountry') || undefined
+  const country =
+    request.headers.get('cf-ipcountry') ||
+    request.headers.get('x-vercel-ip-country') ||
+    request.headers.get('x-appengine-country') ||
+    request.headers.get('x-country-code') ||
+    request.headers.get('x-geo-country') ||
+    undefined
 
   if (!country) return NextResponse.next()
 

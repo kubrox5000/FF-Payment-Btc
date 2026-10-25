@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Loader2, Save, Rocket, Phone, Share2, LifeBuoy, Coins, UserRound, KeyRound, Target } from 'lucide-react'
+import { Loader2, Save, Rocket, Phone, Share2, LifeBuoy, Coins, UserRound, KeyRound, Target, CreditCard, Copy } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { SiteSettings } from '@/lib/settings'
 
@@ -48,6 +48,8 @@ export function SettingsClient() {
           paymentRevolut: s.paymentRevolut,
           telegramBotToken: s.telegramBotToken,
           telegramChatId: s.telegramChatId,
+          atlosMerchantId: s.atlosMerchantId ?? '',
+          atlosApiSecret: s.atlosApiSecret ?? '',
         })
       })
       .catch(() => toast.error('Failed to load settings'))
@@ -216,6 +218,53 @@ export function SettingsClient() {
           <Text label="RedotPay" value={str(draft.paymentRedotpay)} onChange={(v) => set('paymentRedotpay', v)} mono />
           <Text label="Bybit" value={str(draft.paymentBybit)} onChange={(v) => set('paymentBybit', v)} mono />
           <Text label="Revolut" value={str(draft.paymentRevolut)} onChange={(v) => set('paymentRevolut', v)} mono />
+        </div>
+      </Section>
+
+      <Section icon={<CreditCard className="h-4 w-4 text-emerald-400" />} title="Atlos.io Crypto Gateway (بوابة دفع Atlos)">
+        <p className="mb-4 text-xs text-muted-foreground">
+          ربط متجرك ببوابة الدفع المشفرة Atlos.io لاستقبال مدفوعات العملات الرقمية تلقائياً (USDT, BTC, ETH, SOL, TON, وغيرها) بدون وسيط مع تأكيد فوري للطلبات.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Text
+            label="Atlos Merchant ID"
+            value={str(draft.atlosMerchantId)}
+            onChange={(v) => set('atlosMerchantId', v)}
+            placeholder="e.g. your_merchant_id"
+            mono
+          />
+          <Text
+            label="Atlos API Secret (Webhook Secret)"
+            value={str(draft.atlosApiSecret)}
+            onChange={(v) => set('atlosApiSecret', v)}
+            placeholder="e.g. sec_..."
+            mono
+          />
+        </div>
+        <div className="mt-4 rounded-xl border border-white/10 bg-black/40 p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold text-white">رابط الويب هوك الخاص بك (Webhook URL):</p>
+              <code className="text-xs text-emerald-400 select-all">
+                {typeof window !== 'undefined' ? `${window.location.origin}/api/atlos/webhook` : '/api/atlos/webhook'}
+              </code>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const url = typeof window !== 'undefined' ? `${window.location.origin}/api/atlos/webhook` : '/api/atlos/webhook'
+                navigator.clipboard.writeText(url)
+                toast.success('تم نسخ رابط الـ Webhook بنجاح')
+              }}
+              className="inline-flex items-center gap-1.5 self-start rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10 transition-colors"
+            >
+              <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+              نسخ الرابط
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+            ضع هذا الرابط في لوحة تحكم Atlos Dashboard (تحت Settings &gt; Webhooks) حتى يتم تغيير حالة الطلب إلى &quot;مدفوع&quot; وتأكيده تلقائياً بمجرد اكتمال تحويل العملات المشفرة.
+          </p>
         </div>
       </Section>
 

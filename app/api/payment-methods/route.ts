@@ -3,6 +3,7 @@ import { db } from '@/db'
 import { paymentMethods } from '@/db/schemas'
 import { eq, asc } from 'drizzle-orm'
 import { withHeleket } from '@/lib/heleket'
+import { withAtlos } from '@/lib/atlos'
 import type { PublicPaymentMethod } from '@/lib/types'
 import { SEED_PAYMENT_METHODS } from '@/lib/seed-data'
 
@@ -20,7 +21,7 @@ export async function GET() {
       .where(eq(paymentMethods.active, true))
       .orderBy(asc(paymentMethods.sortOrder))
     return NextResponse.json({
-      methods: withHeleket(rows as unknown as PublicPaymentMethod[]).map((m) => ({
+      methods: withAtlos(withHeleket(rows as unknown as PublicPaymentMethod[])).map((m) => ({
         key: m.key,
         label: m.label,
         network: m.network,
@@ -30,7 +31,7 @@ export async function GET() {
     })
   } catch {
     return NextResponse.json({
-      methods: withHeleket(SEED_PAYMENT_METHODS).map((m) => ({
+      methods: withAtlos(withHeleket(SEED_PAYMENT_METHODS)).map((m) => ({
         key: m.key,
         label: m.label,
         network: m.network,
