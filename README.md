@@ -48,6 +48,17 @@ A general-purpose Next.js web application template with database initialization 
    - `pnpm db:migrate` — run migrations
    - `pnpm db:studio` — open Drizzle Studio
 
+## Netlify deployment
+
+`netlify.toml` sets the build command, `.next` publish directory, and the
+`@netlify/plugin-nextjs` adapter. Keep the adapter enabled: it turns the Next.js
+build into Netlify server functions and routing rules for dynamic pages and API
+routes. Publishing `.next` without this processing returns Netlify's 404 page
+because the home page is rendered on the server.
+
+After deploying, check `/`, `/top-up`, and `/api/health`, and confirm the deploy
+summary includes server functions and routing rules.
+
 ## Project Structure
 
 - `app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).
