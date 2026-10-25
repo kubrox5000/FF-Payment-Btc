@@ -505,21 +505,9 @@ function AtlosPanel({ order, expired, mins, secs }: { order: PublicOrder; expire
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
                 {t('pay_atlos_note')}
               </p>
-              <button
-                onClick={() => router.refresh()}
-                className="mt-3 min-h-11 w-full rounded-xl border border-border bg-secondary/40 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {t('pay_heleket_check')}
-              </button>
             </>
           )}
 
-          <button
-            onClick={() => router.push(`/track?q=${order.orderNumber}`)}
-            className="mt-3 min-h-11 w-full rounded-xl border border-border bg-secondary/40 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {t('pay_track')}
-          </button>
         </div>
       </div>
     </div>
