@@ -51,7 +51,7 @@ export default async function TopUpPage() {
         <OfficialBannerSection />
 
         <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-secondary/40" />}>
-          <TopUpForm packages={pkgRows} paymentMethods={withAtlos(withHeleket(methods))} freeGift={settings.freeGift} />
+          <TopUpForm packages={pkgRows} paymentMethods={await withAtlos(withHeleket(methods))} freeGift={settings.freeGift} />
         </Suspense>
       </main>
       <SiteFooter settings={settings} />
