@@ -49,6 +49,7 @@ export const fr = {
 
   // Home sections
   home_packages_kicker: 'Packs de diamants',
+  no_pkgs: 'Aucun pack disponible actuellement. Revenez bientôt.',
   home_packages_title: 'Choisissez votre pack',
   home_packages_sub: 'Recharge instantanée pour tout compte Free Fire. Diamants bonus inclus sur certains packs.',
   home_popular_kicker: '🔥 Les plus demandés',
@@ -199,6 +200,14 @@ export const fr = {
   pay_submitted_toast: 'Paiement soumis! Nous vérifions votre transaction.',
   pay_track: 'Suivre cette commande',
   pay_alt: 'aperçu de la preuve',
+  pay_atlos_sub: 'Paiement en cryptomonnaie',
+  pay_atlos_currencies: 'Cryptomonnaies acceptées',
+  pay_atlos_more: 'et plus',
+  pay_atlos_btn: 'Continuer avec Atlos',
+  pay_atlos_loading: 'Préparation du paiement…',
+  pay_atlos_unavailable: 'Le paiement est temporairement indisponible. Réessayez plus tard.',
+  pay_atlos_note: 'Choisissez la devise et le réseau dans la fenêtre Atlos. Votre commande est mise à jour après confirmation du paiement.',
+  pay_atlos_closed: 'Fenêtre de paiement fermée.',
   pay_heleket_title: 'Payer avec Heleket',
   pay_heleket_sub: 'Paiement crypto sécurisé — USDT, BTC, ETH, TRX et plus',
   pay_heleket_btn: 'Payer maintenant',

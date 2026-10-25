@@ -399,12 +399,12 @@ function AtlosPanel({ order, expired, mins, secs }: { order: PublicOrder; expire
 
   function launchPayment() {
     if (!atlosMerchantId) {
-      toast.error('Atlos Merchant ID is not configured yet. Please configure it in .env or Admin settings.')
+      toast.error(t('pay_atlos_unavailable'))
       return
     }
     const atlos = (window as unknown as { atlos?: { Pay: (opts: Record<string, unknown>) => void } }).atlos
     if (!atlos) {
-      toast.error('Loading Atlos gateway... Please try again in a moment.')
+      toast.error(t('pay_atlos_loading'))
       return
     }
     atlos.Pay({
@@ -414,23 +414,23 @@ function AtlosPanel({ order, expired, mins, secs }: { order: PublicOrder; expire
       orderCurrency: 'USD',
       userEmail: order.email || undefined,
       onSuccess: () => {
-        toast.success('Payment received successfully!')
+        toast.success(t('pay_heleket_paid'))
         router.refresh()
       },
       onCompleted: () => {
-        toast.success('Payment completed!')
+        toast.success(t('pay_heleket_paid'))
         router.refresh()
       },
       onCanceled: () => {
-        toast.info('Payment window closed.')
+        toast.info(t('pay_atlos_closed'))
       },
     })
   }
 
   return (
     <div className="mx-auto max-w-xl">
-      <div className="glass rounded-2xl border p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-xl shadow-background/20">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4 sm:px-7">
           <div>
             <p className="text-xs font-medium text-muted-foreground">{t('pay_order')}</p>
             <p className="font-mono text-lg font-bold" translate="no">{order.orderNumber}</p>
@@ -448,58 +448,67 @@ function AtlosPanel({ order, expired, mins, secs }: { order: PublicOrder; expire
           )}
         </div>
 
-        <div className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4">
-          <CryptoIcon id="ATLOS" className="h-10 w-10 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold">Atlos Crypto Gateway</p>
-            <p className="text-xs text-muted-foreground">USDT, BTC, ETH, SOL, LTC, etc.</p>
+        <div className="p-5 sm:p-7">
+          <div className="flex items-center gap-3">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-primary/20 bg-primary/5">
+              <CryptoIcon id="ATLOS" className="h-10 w-10" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold tracking-tight">Atlos</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">{t('pay_atlos_sub')}</p>
+            </div>
           </div>
-          <code className="text-base font-bold text-sky-400" translate="no">
-            ${parseFloat(order.amountUsd).toFixed(2)} USD
-          </code>
-        </div>
 
-        {paid ? (
-          <div className="mt-5 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-            <p>Payment confirmed! Your diamonds will be delivered within minutes.</p>
-          </div>
-        ) : review ? (
-          <div className="mt-5 rounded-lg border border-sky-500/30 bg-sky-500/10 p-4 text-sm text-sky-200">{t('pay_already')}</div>
-        ) : cancelled || expired ? (
-          <div className="mt-5 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <p>{t('pay_heleket_expired')}</p>
-          </div>
-        ) : (
-          <>
-            <button
-              onClick={launchPayment}
-              disabled={loadingConfig}
-              className="btn-shimmer glow-primary mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-primary px-4 py-3.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-50"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Pay with Atlos (Crypto) ⚡
-            </button>
-            <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-              Secure, non-custodial crypto checkout with real-time confirmation.
+          <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
+            <p className="text-xs font-medium text-muted-foreground">{t('pay_exact')}</p>
+            <p className="mt-2 flex flex-wrap items-baseline gap-2" dir="ltr" translate="no">
+              <span className="text-4xl font-semibold tabular-nums tracking-tight text-foreground">${Number(order.amountUsd).toFixed(2)}</span>
+              <span className="text-sm font-medium text-muted-foreground">USD</span>
             </p>
-            <button
-              onClick={() => router.refresh()}
-              className="mt-3 w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
-            >
-              Check Payment Status
-            </button>
-          </>
-        )}
+            <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-primary/15 pt-4" aria-label={t('pay_atlos_currencies')}>
+              {['USDT', 'BTC', 'ETH', 'SOL'].map((coin) => (
+                <span key={coin} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium" dir="ltr" translate="no">
+                  <CryptoIcon id={coin} className="h-4 w-4" />{coin}
+                </span>
+              ))}
+              <span className="text-xs text-muted-foreground">{t('pay_atlos_more')}</span>
+            </div>
+          </div>
 
-        <button
-          onClick={() => router.push(`/track?q=${order.orderNumber}`)}
-          className="mt-3 w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
-        >
-          {t('pay_track')}
-        </button>
+          {paid ? (
+            <div className="mt-5 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-600 dark:text-emerald-300">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>{t('pay_heleket_paid')}</p>
+            </div>
+          ) : review ? (
+            <div className="mt-5 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">{t('pay_already')}</div>
+          ) : cancelled || expired ? (
+            <div className="mt-5 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-destructive">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>{t('pay_heleket_expired')}</p>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={launchPayment}
+                disabled={loadingConfig || !atlosMerchantId}
+                aria-busy={loadingConfig}
+                className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loadingConfig ? <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <ExternalLink className="h-4 w-4" aria-hidden="true" />}
+                {loadingConfig ? t('pay_atlos_loading') : t('pay_atlos_btn')}
+              </button>
+              {!loadingConfig && !atlosMerchantId && (
+                <p role="alert" className="mt-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">{t('pay_atlos_unavailable')}</p>
+              )}
+              <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+                {t('pay_atlos_note')}
+              </p>
+            </>
+          )}
+
+        </div>
       </div>
     </div>
   )

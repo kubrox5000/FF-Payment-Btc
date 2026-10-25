@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get('x-webhook-signature') || req.headers.get('x-signature')
     const timestamp = req.headers.get('x-webhook-timestamp')
 
-    if (!verifyAtlosWebhook(rawBody, signature, timestamp)) {
+    if (!(await verifyAtlosWebhook(rawBody, signature, timestamp))) {
       console.warn('[atlos] Webhook signature verification failed')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
