@@ -508,15 +508,16 @@ function MethodTile({ m, selected, onClick }: { m: PublicPaymentMethod; selected
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
       className={cn(
-        'group flex flex-col items-center gap-2 rounded-2xl border p-3.5 text-center transition-colors',
+        'group relative flex flex-col items-center gap-2.5 rounded-2xl border px-3 py-4 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card',
         selected
-          ? 'border-primary bg-primary/5 glow-primary'
+          ? 'border-primary bg-primary/10'
           : 'border-border bg-card/60 hover:border-primary/50 hover:bg-card',
       )}
     >
       <span className="w-full truncate text-xs font-semibold">{m.label}</span>
-      <span className="grid h-10 w-10 shrink-0 place-items-center">
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-border/70 bg-background/50">
         <CryptoIcon id={m.key} className="h-8 w-8" />
       </span>
       {m.network ? (
@@ -524,7 +525,9 @@ function MethodTile({ m, selected, onClick }: { m: PublicPaymentMethod; selected
       ) : (
         <span className="h-[13px] w-full" />
       )}
-      {selected && <CheckCircle2 className="h-4 w-4 text-primary" />}
+      <span className="grid h-4 w-4 place-items-center" aria-hidden="true">
+        {selected ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <span className="h-3.5 w-3.5 rounded-full border border-muted-foreground/40" />}
+      </span>
     </button>
   )
 }
