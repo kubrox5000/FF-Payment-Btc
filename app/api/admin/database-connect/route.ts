@@ -223,6 +223,7 @@ export async function POST(req: Request) {
     }, { status: 500 })
   }
 
+  process.env.DATABASE_URL = url
   try {
     await updateEnvFile(url)
   } catch {

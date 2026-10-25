@@ -1,10 +1,10 @@
-import { readdir, readFile } from "node:fs/promises"
-import path from "node:path"
-import { fileURLToPath, pathToFileURL } from "node:url"
+import { readdir, readFile } from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import postcss from "postcss"
+import postcss from 'postcss'
 
-const sourceRoot = fileURLToPath(new URL("../src", import.meta.url))
+const sourceRoot = fileURLToPath(new URL('../src', import.meta.url))
 
 async function findCssFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true })
@@ -12,7 +12,7 @@ async function findCssFiles(directory) {
     entries.map(async (entry) => {
       const target = path.join(directory, entry.name)
       if (entry.isDirectory()) return findCssFiles(target)
-      return entry.isFile() && entry.name.endsWith(".css") ? [target] : []
+      return entry.isFile() && entry.name.endsWith('.css') ? [target] : []
     }),
   )
   return files.flat()
@@ -21,7 +21,7 @@ async function findCssFiles(directory) {
 function hasAncestorAtRule(rule, predicate) {
   let parent = rule.parent
   while (parent) {
-    if (parent.type === "atrule" && predicate(parent.name.toLowerCase())) {
+    if (parent.type === 'atrule' && predicate(parent.name.toLowerCase())) {
       return true
     }
     parent = parent.parent
@@ -29,14 +29,14 @@ function hasAncestorAtRule(rule, predicate) {
   return false
 }
 
-export function findUnlayeredRules(source, from = "<css>") {
+export function findUnlayeredRules(source, from = '<css>') {
   const root = postcss.parse(source, { from })
   const violations = []
 
   root.walkRules((rule) => {
-    const inLayer = hasAncestorAtRule(rule, (name) => name === "layer")
+    const inLayer = hasAncestorAtRule(rule, (name) => name === 'layer')
     const inKeyframes = hasAncestorAtRule(rule, (name) =>
-      name.endsWith("keyframes"),
+      name.endsWith('keyframes'),
     )
     if (!inLayer && !inKeyframes) {
       violations.push({
@@ -54,7 +54,7 @@ async function main() {
   let failed = false
 
   for (const file of cssFiles) {
-    const source = await readFile(file, "utf8")
+    const source = await readFile(file, 'utf8')
     for (const violation of findUnlayeredRules(source, file)) {
       failed = true
       const relative = path.relative(process.cwd(), file)

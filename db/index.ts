@@ -2,30 +2,20 @@ import 'server-only'
 import { cache } from 'react'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import { detectSsl } from '../lib/db-ssl'
+import { detectSsl, isDatabaseConfigured, getActiveDatabaseUrl } from '../lib/db-ssl'
 
-// Create one postgres client PER REQUEST, scoped via React's `cache()`.
-//
-// Do NOT cache the client on `globalThis`: Cloudflare Workers (workerd) forbids
-// reusing an I/O object (the DB socket) created in one request from another
-// request. A cross-request cached client makes concurrent requests on a freshly
-// spun-up isolate await a connection promise that belongs to a different
-// request's context, which the runtime flags as "hung" and returns as
-// Error 1101 (it self-heals once the connection is established, hence the
-// intermittent failures right after a deploy or on isolate cold-start).
-//
-// `cache()` scopes the client to a single request: reused within the request
-// (so the lazy proxy below does not open a new connection on every property
-// access), and discarded between requests (no illegal cross-request reuse).
+export { isDatabaseConfigured, getActiveDatabaseUrl }
+
 const getClient = cache(() => {
-  if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL is not set')
+  const url = getActiveDatabaseUrl()
+  if (!url) {
+    throw new Error('DATABASE_URL is not set or not configured')
   }
-  return postgres(process.env.DATABASE_URL, {
+  return postgres(url, {
     prepare: false,
     max: 1,
     idle_timeout: 20,
-    ssl: detectSsl(process.env.DATABASE_URL),
+    ssl: detectSsl(url),
   })
 })
 
@@ -33,10 +23,45 @@ function getDb() {
   return drizzle(getClient())
 }
 
+const noOp = {
+  findMany: async () => [],
+  findFirst: async () => null,
+  findUnique: async () => null,
+  create: async (d: any) => d?.data ?? {},
+  update: async (d: any) => d?.data ?? {},
+  delete: async () => ({}),
+}
+
+function createChainableMock(): any {
+  const handler: any = {
+    get(_target: any, prop: string | symbol) {
+      if (prop === 'then') {
+        return (resolve: (val: any) => any) => Promise.resolve([]).then(resolve)
+      }
+      if (prop === 'catch') {
+        return (reject: (err: any) => any) => Promise.resolve([]).catch(reject)
+      }
+      return createChainableMock()
+    },
+    apply() {
+      return createChainableMock()
+    },
+  }
+  return new Proxy(() => {}, handler)
+}
+
 // Lazy proxy: the DB connection is only established at runtime (not at build /
 // module-eval time) and is resolved per request through `getClient()`.
 export const db = new Proxy({} as ReturnType<typeof getDb>, {
   get(_target, prop: string | symbol) {
-    return (getDb() as unknown as Record<string | symbol, unknown>)[prop]
+    if (!isDatabaseConfigured()) {
+      return prop === 'query' ? new Proxy({}, { get: () => noOp }) : createChainableMock()
+    }
+    try {
+      return (getDb() as unknown as Record<string | symbol, unknown>)[prop]
+    } catch {
+      return prop === 'query' ? new Proxy({}, { get: () => noOp }) : createChainableMock()
+    }
   },
 })
+

@@ -1,11 +1,8 @@
 import 'server-only'
-import { db } from '@/db'
-import { settings } from '@/db/schemas'
-import { eq, sql } from 'drizzle-orm'
 import { unstable_cache, revalidateTag as _revalidateTag } from 'next/cache'
 const revalidateTag = (tag: string) => (_revalidateTag as (tag: string, ...args: unknown[]) => undefined)(tag)
 import postgres from 'postgres'
-import { detectSsl } from '@/lib/db-ssl'
+import { detectSsl, isDatabaseConfigured, getActiveDatabaseUrl } from '@/lib/db-ssl'
 
 export interface SiteSettings {
   siteName: string
@@ -96,8 +93,8 @@ const DEFAULTS: SiteSettings = {
 }
 
 function getRawSql() {
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set')
-  const url = process.env.DATABASE_URL
+  const url = getActiveDatabaseUrl()
+  if (!url) throw new Error('DATABASE_URL is not configured')
   return postgres(url, {
     prepare: false,
     max: 1,
@@ -119,15 +116,19 @@ function parseSettingsRaw(raw: string): Partial<SiteSettings> {
 }
 
 async function readSettingsRaw(): Promise<SiteSettings> {
-  const rawSql = getRawSql()
+  if (!isDatabaseConfigured()) return DEFAULTS
+  let rawSql: ReturnType<typeof postgres> | null = null
   try {
+    rawSql = getRawSql()
     const rows = await rawSql`SELECT data::text as raw FROM settings WHERE id = 1`
     await rawSql.end()
     if (rows.length === 0) return DEFAULTS
     return { ...DEFAULTS, ...parseSettingsRaw(rows[0].raw) }
   } catch (err) {
-    console.error('[settings] readSettingsRaw error:', err)
-    try { await rawSql.end() } catch { /* ignore */ }
+    console.warn('[settings] readSettingsRaw error:', err)
+    if (rawSql) {
+      try { await rawSql.end() } catch { /* ignore */ }
+    }
     return DEFAULTS
   }
 }

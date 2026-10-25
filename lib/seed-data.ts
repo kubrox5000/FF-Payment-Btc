@@ -2,34 +2,10 @@
  * بيانات تجريبية كاملة مأخوذة من seed.ts الأصلي.
  * تُستخدم عندما لا تتوفر قاعدة بيانات (DATABASE_URL غير محدد).
  */
-import type { PublicPackage, PublicReview } from '@/lib/types'
+import type { PublicPackage, PublicReview, PublicPaymentMethod } from '@/lib/types'
 
-export const SEED_PACKAGES: PublicPackage[] = [
-  { id: 1,  diamonds: 3100,   bonusDiamonds: 250,  priceUsd: '19',  priceUsdt: '19',  discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-5 minutes',  active: true, sortOrder: 1 },
-  { id: 2,  diamonds: 6500,   bonusDiamonds: 500,  priceUsd: '38',  priceUsdt: '38',  discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-5 minutes',  active: true, sortOrder: 2 },
-  { id: 3,  diamonds: 9600,   bonusDiamonds: 750,  priceUsd: '53',  priceUsdt: '53',  discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-5 minutes',  active: true, sortOrder: 3 },
-  { id: 4,  diamonds: 10500,  bonusDiamonds: 850,  priceUsd: '68',  priceUsdt: '68',  discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-5 minutes',  active: true, sortOrder: 4 },
-  { id: 5,  diamonds: 14000,  bonusDiamonds: 1100, priceUsd: '83',  priceUsdt: '83',  discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-5 minutes',  active: true, sortOrder: 5 },
-  { id: 6,  diamonds: 17500,  bonusDiamonds: 1400, priceUsd: '98',  priceUsdt: '98',  discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-5 minutes',  active: true, sortOrder: 6 },
-  { id: 7,  diamonds: 21000,  bonusDiamonds: 0,    priceUsd: '113', priceUsdt: '113', discountPct: 0,  popular: true,  flashSale: false, deliveryEta: '1-10 minutes', active: true, sortOrder: 7 },
-  { id: 8,  diamonds: 24500,  bonusDiamonds: 0,    priceUsd: '128', priceUsdt: '128', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-10 minutes', active: true, sortOrder: 8 },
-  { id: 9,  diamonds: 28000,  bonusDiamonds: 0,    priceUsd: '143', priceUsdt: '143', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-10 minutes', active: true, sortOrder: 9 },
-  { id: 10, diamonds: 32000,  bonusDiamonds: 0,    priceUsd: '159', priceUsdt: '159', discountPct: 0,  popular: true,  flashSale: false, deliveryEta: '1-10 minutes', active: true, sortOrder: 10 },
-  { id: 11, diamonds: 36000,  bonusDiamonds: 0,    priceUsd: '179', priceUsdt: '179', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '1-10 minutes', active: true, sortOrder: 11 },
-  { id: 12, diamonds: 40000,  bonusDiamonds: 0,    priceUsd: '199', priceUsdt: '199', discountPct: 0,  popular: true,  flashSale: false, deliveryEta: '1-10 minutes', active: true, sortOrder: 12 },
-  { id: 13, diamonds: 45000,  bonusDiamonds: 0,    priceUsd: '219', priceUsdt: '219', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-15 minutes', active: true, sortOrder: 13 },
-  { id: 14, diamonds: 50000,  bonusDiamonds: 0,    priceUsd: '239', priceUsdt: '239', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-15 minutes', active: true, sortOrder: 14 },
-  { id: 15, diamonds: 60000,  bonusDiamonds: 0,    priceUsd: '279', priceUsdt: '279', discountPct: 0,  popular: true,  flashSale: false, deliveryEta: '2-15 minutes', active: true, sortOrder: 15 },
-  { id: 16, diamonds: 70000,  bonusDiamonds: 0,    priceUsd: '319', priceUsdt: '319', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-15 minutes', active: true, sortOrder: 16 },
-  { id: 17, diamonds: 80000,  bonusDiamonds: 0,    priceUsd: '359', priceUsdt: '359', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-15 minutes', active: true, sortOrder: 17 },
-  { id: 18, diamonds: 90000,  bonusDiamonds: 0,    priceUsd: '399', priceUsdt: '399', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-15 minutes', active: true, sortOrder: 18 },
-  { id: 19, diamonds: 100000, bonusDiamonds: 0,    priceUsd: '439', priceUsdt: '439', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-15 minutes', active: true, sortOrder: 19 },
-  { id: 20, diamonds: 120000, bonusDiamonds: 0,    priceUsd: '519', priceUsdt: '519', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-15 minutes', active: true, sortOrder: 20 },
-  { id: 21, diamonds: 150000, bonusDiamonds: 0,    priceUsd: '639', priceUsdt: '639', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-30 minutes', active: true, sortOrder: 21 },
-  { id: 22, diamonds: 180000, bonusDiamonds: 0,    priceUsd: '759', priceUsdt: '759', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-30 minutes', active: true, sortOrder: 22 },
-  { id: 23, diamonds: 210000, bonusDiamonds: 0,    priceUsd: '879', priceUsdt: '879', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-30 minutes', active: true, sortOrder: 23 },
-  { id: 24, diamonds: 240000, bonusDiamonds: 0,    priceUsd: '999', priceUsdt: '999', discountPct: 0,  popular: false, flashSale: false, deliveryEta: '2-30 minutes', active: true, sortOrder: 24 },
-]
+export const SEED_PACKAGES: PublicPackage[] = []
+
 
 export const SEED_REVIEWS: PublicReview[] = [
   { id: 1,  name: 'Yasmin Bilal',      rating: 5, title: 'Amazing experience from the start!',    comment: 'First time dealing with this site and it was a great experience. Payment was secure and delivery instant. I recommended it to all my friends.', country: 'Morocco',       countryCode: 'MA', packageLabel: '3100', verified: true, createdAt: new Date(Date.now() - 2*86400000).toISOString() },
@@ -62,4 +38,21 @@ export const SEED_REVIEWS: PublicReview[] = [
   { id: 28, name: 'Layla Benali',       rating: 5, title: 'Excellent, as always',                  comment: 'A smooth buy every single time. Great prices, quick delivery and real human support when I had questions.', country: 'Tunisia',       countryCode: 'TN', packageLabel: '40000', verified: true, createdAt: new Date(Date.now() - 36*86400000).toISOString() },
   { id: 29, name: 'Adam Williams',      rating: 5, title: 'Top quality service',                   comment: 'Very smooth process, unbeatable prices and the diamonds landed instantly. Could not ask for more.', country: 'United Kingdom',countryCode: 'GB', packageLabel: '21000', verified: true, createdAt: new Date(Date.now() - 38*86400000).toISOString() },
   { id: 30, name: 'Chloe Martin',       rating: 5, title: 'A pleasure to recommend',               comment: 'The site is easy to navigate, paying was quick and diamonds came through in just a few minutes. Loved it.', country: 'France',        countryCode: 'FR', packageLabel: '9600', verified: true, createdAt: new Date(Date.now() - 41*86400000).toISOString() },
+]
+
+export const SEED_PAYMENT_METHODS: PublicPaymentMethod[] = [
+  { id: 1, key: 'USDT_TRC20', label: 'USDT (TRC20)', network: 'Tron Network', cat: 'crypto', icon: 'usdt', walletAddress: 'TXk8rQSAENoUmYY6fNXhZQ3xW6y1kY5abc', active: true, sortOrder: 1 },
+  { id: 2, key: 'USDT_BEP20', label: 'USDT (BEP20)', network: 'BNB Smart Chain', cat: 'crypto', icon: 'usdt', walletAddress: '0x8fD3a9b0C21e4A5c6F7d8E9a0B1c2D3e4F5a6B7c', active: true, sortOrder: 2 },
+  { id: 3, key: 'BINANCE_PAY', label: 'Binance Pay', network: 'Binance App', cat: 'wallet', icon: 'binance', walletAddress: '123456789', active: true, sortOrder: 3 },
+  { id: 4, key: 'BTC', label: 'BTC', network: 'Bitcoin Network', cat: 'crypto', icon: 'btc', walletAddress: 'bc1qxyzabc123def456ghi789jkl012mno345pqr678', active: true, sortOrder: 4 },
+  { id: 5, key: 'ETH', label: 'ETH', network: 'Ethereum Network', cat: 'crypto', icon: 'eth', walletAddress: '0x1a2B3c4D5e6F7a8B9c0D1e2F3a4B5c6D7e8F9a0B', active: true, sortOrder: 5 },
+  { id: 6, key: 'BNB', label: 'BNB', network: 'BNB Smart Chain', cat: 'crypto', icon: 'bnb', walletAddress: '0x9f8e7d6c5b4a3928171605040302010098a7b6c5', active: true, sortOrder: 6 },
+  { id: 7, key: 'USDC', label: 'USDC', network: 'Ethereum Network', cat: 'crypto', icon: 'usdc', walletAddress: '0x4e5F6a7B8c9D0e1F2a3B4c5D6e7F8a9B0c1D2e3F', active: true, sortOrder: 7 },
+  { id: 8, key: 'WISE', label: 'Wise', network: 'Wise Account', cat: 'wallet', icon: 'wise', walletAddress: 'payments@diamondboost.gg', active: true, sortOrder: 8 },
+  { id: 9, key: 'PAYONEER', label: 'Payoneer', network: 'Payoneer Account', cat: 'wallet', icon: 'payoneer', walletAddress: 'payoneer@diamondboost.gg', active: true, sortOrder: 9 },
+  { id: 10, key: 'SKRILL', label: 'Skrill', network: 'Skrill Account', cat: 'wallet', icon: 'skrill', walletAddress: 'skrill@diamondboost.gg', active: true, sortOrder: 10 },
+  { id: 11, key: 'NETELLER', label: 'Neteller', network: 'Neteller Account', cat: 'wallet', icon: 'neteller', walletAddress: 'neteller@diamondboost.gg', active: true, sortOrder: 11 },
+  { id: 12, key: 'REDOTPAY', label: 'RedotPay', network: 'RedotPay', cat: 'wallet', icon: 'redotpay', walletAddress: 'redotpay@diamondboost.gg', active: true, sortOrder: 12 },
+  { id: 13, key: 'BYBIT', label: 'Bybit', network: 'Bybit Account', cat: 'wallet', icon: 'bybit', walletAddress: 'bybit@diamondboost.gg', active: true, sortOrder: 13 },
+  { id: 14, key: 'REVOLUT', label: 'Revolut', network: 'Revolut Account', cat: 'wallet', icon: 'revolut', walletAddress: 'revolut@diamondboost.gg', active: true, sortOrder: 14 },
 ]

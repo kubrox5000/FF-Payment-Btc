@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { writeFile, readFile } from 'fs/promises'
 import path from 'path'
-import { detectSsl } from '@/lib/db-ssl'
+import { detectSsl, isDatabaseConfigured } from '@/lib/db-ssl'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,18 +18,11 @@ async function readEnv(): Promise<string> {
   }
 }
 
-function hasRealDatabaseUrl(content: string): boolean {
-  const match = content.match(/^DATABASE_URL=(.+)$/m)
-  if (!match) return false
-  const val = match[1].trim()
-  return val.length > 0 && !val.startsWith('postgres://USER') && !val.startsWith('postgresql://USER')
-}
-
 export async function GET() {
   const content = await readEnv()
   const match = content.match(/^DATABASE_URL=(.+)$/m)
-  const current = match ? match[1].trim() : ''
-  const configured = hasRealDatabaseUrl(content)
+  const current = match ? match[1].trim() : (process.env.DATABASE_URL ?? '')
+  const configured = isDatabaseConfigured()
   return NextResponse.json({ configured, masked: configured ? current.replace(/:\/\/[^@]+@/, '://****:****@') : '' })
 }
 
@@ -54,14 +47,19 @@ export async function POST(req: Request) {
     `
     await sql.end()
 
-    // Save to .env
+    // Save to .env and runtime env
+    process.env.DATABASE_URL = url
     let content = await readEnv()
     if (content.includes('DATABASE_URL=')) {
       content = content.replace(/^DATABASE_URL=.*$/m, `DATABASE_URL=${url}`)
     } else {
       content = content + `\nDATABASE_URL=${url}\n`
     }
-    await writeFile(path.join(process.cwd(), '.env'), content, 'utf-8')
+    try {
+      await writeFile(path.join(process.cwd(), '.env'), content, 'utf-8')
+    } catch {
+      // In production read-only filesystem
+    }
 
     return NextResponse.json({ ok: true, tables: rows.map((r) => r.tablename) })
   } catch (err: unknown) {

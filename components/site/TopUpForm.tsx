@@ -188,9 +188,15 @@ export function TopUpForm({ packages, paymentMethods, freeGift }: {
         {/* Package selection */}
         <SectionHeading>{t('top_step1')}</SectionHeading>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-          {packages.map((p) => (
-            <PackageCard key={p.id} pkg={p} selected={selected?.id === p.id} onSelect={setSelected} ctaLabel={t('pkg_select')} freeGift={freeGift} />
-          ))}
+          {packages.length === 0 ? (
+            <div className="col-span-full rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              {lang === 'ar' ? 'لا توجد باقات متوفرة حالياً' : 'No packages available at the moment'}
+            </div>
+          ) : (
+            packages.map((p) => (
+              <PackageCard key={p.id} pkg={p} selected={selected?.id === p.id} onSelect={setSelected} ctaLabel={t('pkg_select')} freeGift={freeGift} />
+            ))
+          )}
         </div>
 
         {/* Details */}

@@ -9,6 +9,7 @@ import { AnnouncementBanner } from '@/components/site/AnnouncementBanner'
 import { HomeContent } from '@/components/geo/HomeContent'
 import { LocalizedTitle } from '@/components/geo/LocalizedTitle'
 import { getSettings } from '@/lib/settings'
+import { isDatabaseConfigured } from '@/lib/db-ssl'
 import { SEED_PACKAGES, SEED_REVIEWS } from '@/lib/seed-data'
 import type { PublicPackage, PublicReview } from '@/lib/types'
 import { localizedPageMetadata } from '@/lib/seo'
@@ -25,7 +26,7 @@ export default async function HomePage() {
   let pkgRows: PublicPackage[] = SEED_PACKAGES
   let reviewRows: PublicReview[] = SEED_REVIEWS
 
-  if (process.env.DATABASE_URL) {
+  if (isDatabaseConfigured()) {
     try {
       const getCachedPackages = unstable_cache(
         async () =>

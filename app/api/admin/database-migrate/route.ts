@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/admin-session'
-import { detectSsl } from '@/lib/db-ssl'
+import { detectSsl, getActiveDatabaseUrl } from '@/lib/db-ssl'
 
 export const dynamic = 'force-dynamic'
 
@@ -124,8 +124,13 @@ export async function POST() {
   const session = await getAdminSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const url = process.env.DATABASE_URL
-  if (!url) return NextResponse.json({ error: 'DATABASE_URL is not configured' }, { status: 400 })
+  const url = getActiveDatabaseUrl()
+  if (!url) {
+    return NextResponse.json(
+      { error: 'No database connected. Please enter your PostgreSQL connection URL below in "Connect New Database" first.' },
+      { status: 400 },
+    )
+  }
 
   try {
     const postgres = (await import('postgres')).default

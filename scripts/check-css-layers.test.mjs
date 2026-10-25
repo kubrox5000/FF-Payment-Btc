@@ -1,9 +1,9 @@
-import assert from "node:assert/strict"
-import test from "node:test"
+import assert from 'node:assert/strict'
+import test from 'node:test'
 
-import { findUnlayeredRules } from "./check-css-layers.mjs"
+import { findUnlayeredRules } from './check-css-layers.mjs'
 
-test("rejects every unlayered ordinary rule", () => {
+test('rejects every unlayered ordinary rule', () => {
   const source = `
     blockquote { color: red; }
     dl { margin: 0; }
@@ -14,11 +14,11 @@ test("rejects every unlayered ordinary rule", () => {
 
   assert.deepEqual(
     findUnlayeredRules(source).map(({ selector }) => selector),
-    ["blockquote", "dl", "#app", ":root", ".button"],
+    ['blockquote', 'dl', '#app', ':root', '.button'],
   )
 })
 
-test("accepts rules inside cascade layers and keyframes", () => {
+test('accepts rules inside cascade layers and keyframes', () => {
   const source = `
     @layer base { :root { --brand: red; } }
     @layer components {

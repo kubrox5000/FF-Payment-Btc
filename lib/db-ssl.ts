@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
 /**
  * يكشف تلقائياً إعدادات SSL المناسبة بناءً على مزود قاعدة البيانات.
  *
@@ -38,3 +41,50 @@ export function detectSsl(databaseUrl: string): 'require' | 'prefer' | false {
   // الافتراضي: حاول SSL إن أمكن
   return 'prefer'
 }
+
+function isValidDbUrl(url?: string | null): boolean {
+  if (!url) return false
+  const trimmed = url.trim()
+  if (
+    trimmed.length === 0 ||
+    trimmed.startsWith('postgres://USER') ||
+    trimmed.startsWith('postgresql://USER') ||
+    trimmed.includes('@HOST:PORT')
+  ) {
+    return false
+  }
+  try {
+    const parsed = new URL(trimmed)
+    return Boolean(parsed.hostname && parsed.hostname !== 'HOST')
+  } catch {
+    return false
+  }
+}
+
+export function getActiveDatabaseUrl(): string | null {
+  const envUrl = process.env.DATABASE_URL
+  if (isValidDbUrl(envUrl)) {
+    return envUrl!.trim()
+  }
+  try {
+    const envPath = path.join(process.cwd(), '.env')
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf-8')
+      const match = content.match(/^DATABASE_URL=(.+)$/m)
+      if (match && isValidDbUrl(match[1])) {
+        const found = match[1].trim()
+        process.env.DATABASE_URL = found
+        return found
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
+export function isDatabaseConfigured(): boolean {
+  return Boolean(getActiveDatabaseUrl())
+}
+
+

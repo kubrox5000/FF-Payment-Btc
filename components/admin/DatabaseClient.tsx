@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Database, CheckCircle, XCircle, Loader2, AlertTriangle, Eye, EyeOff, RefreshCw, Zap, TableProperties } from 'lucide-react'
 
 type Status = 'idle' | 'testing' | 'connecting' | 'migrating' | 'seeding' | 'success' | 'error'
@@ -12,6 +12,18 @@ export function DatabaseClient() {
   const [message, setMessage] = useState('')
   const [tables, setTables] = useState<string[]>([])
   const [testResult, setTestResult] = useState<null | { ok: boolean; tables?: string[] }>(null)
+  const [configured, setConfigured] = useState(false)
+  const [currentDbMasked, setCurrentDbMasked] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/database-setup')
+      .then((r) => r.json())
+      .then((d: { configured: boolean; masked: string }) => {
+        setConfigured(Boolean(d.configured))
+        if (d.masked) setCurrentDbMasked(d.masked)
+      })
+      .catch(() => {})
+  }, [])
 
   async function handleTest() {
     if (!url.trim()) return
@@ -56,6 +68,8 @@ export function DatabaseClient() {
         setStatus('success')
         setMessage(data.message ?? 'Connected successfully!')
         setTables(data.tables ?? [])
+        setConfigured(true)
+        setCurrentDbMasked(url.trim().replace(/:\/\/[^@]+@/, '://****:****@'))
       } else {
         setStatus('error')
         setMessage(data.error ?? 'Connection failed')
@@ -68,6 +82,11 @@ export function DatabaseClient() {
 
   // تهيئة الجداول على قاعدة البيانات الحالية بدون تغيير URL
   async function handleMigrateCurrent() {
+    if (!configured && !url.trim()) {
+      setStatus('error')
+      setMessage('لم يتم ربط قاعدة بيانات بعد. يرجى إدخال رابط اتصال PostgreSQL في قسم Connect New Database بالأسفل أولاً.')
+      return
+    }
     setStatus('migrating')
     setMessage('')
     try {
@@ -141,6 +160,11 @@ export function DatabaseClient() {
           </code>
           {' '}اضغط هنا لإنشاء جميع الجداول تلقائياً.
         </p>
+        {!configured && (
+          <p className="text-xs text-amber-400/90 font-medium bg-amber-500/10 border border-amber-500/20 rounded-lg p-2.5">
+            ⚠️ تنبيه: لم يتم ربط قاعدة بيانات PostgreSQL بعد. أدخل رابط الاتصال في قسم <strong>Connect New Database</strong> بالأسفل ثم اضغط <strong>Connect & Apply Migrations</strong>.
+          </p>
+        )}
         <button
           onClick={handleMigrateCurrent}
           disabled={busy}
@@ -168,17 +192,26 @@ export function DatabaseClient() {
 
       {/* ── Current status ────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-border bg-card/50 p-4 flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
+        <div className={`grid h-10 w-10 place-items-center rounded-xl ${configured ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
           <Database className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold">Current Database</p>
-          <p className="text-xs text-muted-foreground truncate">PostgreSQL</p>
+          <p className="text-xs text-muted-foreground truncate font-mono">
+            {configured ? (currentDbMasked || 'PostgreSQL (Connected)') : 'No database connected (Using fallback data)'}
+          </p>
         </div>
-        <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          Active
-        </span>
+        {configured ? (
+          <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            Active
+          </span>
+        ) : (
+          <span className="flex items-center gap-1 text-xs text-amber-400 font-medium">
+            <span className="h-2 w-2 rounded-full bg-amber-400" />
+            Not Connected
+          </span>
+        )}
       </div>
 
       {/* ── Connect new database ──────────────────────────────────────────── */}

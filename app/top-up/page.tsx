@@ -10,10 +10,11 @@ import { PageHeader } from '@/components/geo/PageHeader'
 import { LocalizedTitle } from '@/components/geo/LocalizedTitle'
 import { OfficialBannerSection } from '@/components/site/OfficialBadge'
 import { getSettings } from '@/lib/settings'
-import { SEED_PACKAGES } from '@/lib/seed-data'
+import { SEED_PACKAGES, SEED_PAYMENT_METHODS } from '@/lib/seed-data'
 import type { PublicPackage, PublicPaymentMethod } from '@/lib/types'
 import { localizedPageMetadata } from '@/lib/seo'
 import { withHeleket } from '@/lib/heleket'
+import { isDatabaseConfigured } from '@/lib/db-ssl'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,10 +24,10 @@ export async function generateMetadata() {
 
 export default async function TopUpPage() {
   let pkgRows: PublicPackage[] = SEED_PACKAGES
-  let methods: PublicPaymentMethod[] = []
-  let settings = await getSettings()
+  let methods: PublicPaymentMethod[] = SEED_PAYMENT_METHODS
+  const settings = await getSettings()
 
-  if (process.env.DATABASE_URL) {
+  if (isDatabaseConfigured()) {
     try {
       const [dbPkgs, dbMethods] = await Promise.all([
         db.select().from(packages).where(eq(packages.active, true)).orderBy(asc(packages.sortOrder)),

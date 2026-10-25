@@ -22,7 +22,7 @@ export function SiteBrand({ nameClass = 'text-lg font-extrabold tracking-tight t
   return (
     <>
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
+         
         <img src={src} alt={name} className="h-8 w-auto max-w-40 object-contain" />
       ) : (
         <span className="text-2xl diamond-float leading-none" aria-hidden>💎</span>

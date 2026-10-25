@@ -44,7 +44,7 @@ function initPixel(pixelId: string) {
   if (w.fbq) return // already initialised
 
   // Official Facebook Pixel base snippet
-  const fbq: any = function() { fbq.callMethod ? fbq.callMethod.apply(fbq, arguments) : fbq.queue.push(arguments) }
+  const fbq: any = function(...args: any[]) { fbq.callMethod ? fbq.callMethod(...args) : fbq.queue.push(args) }
   if (!w._fbq) w._fbq = fbq
   fbq.push = fbq
   fbq.loaded = true

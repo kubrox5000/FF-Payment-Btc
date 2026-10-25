@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/admin-session'
 import { seedDatabase } from '@/lib/db-seed'
+import { getActiveDatabaseUrl } from '@/lib/db-ssl'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,7 +9,7 @@ export async function POST() {
   const session = await getAdminSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const url = process.env.DATABASE_URL
+  const url = getActiveDatabaseUrl()
   if (!url) return NextResponse.json({ error: 'No DATABASE_URL configured' }, { status: 400 })
 
   try {

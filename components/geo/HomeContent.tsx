@@ -62,11 +62,17 @@ export function HomeContent({ pkgs, reviews, totalReviews, averageRating, freeGi
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">{t('home_packages_sub')}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-          {pkgs.map((p) => (
-            <PkgLink key={p.id} p={p} freeGift={freeGift} />
-          ))}
-        </div>
+        {pkgs.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
+            {t('no_pkgs') || 'لا توجد باقات متوفرة حالياً'}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+            {pkgs.map((p) => (
+              <PkgLink key={p.id} p={p} freeGift={freeGift} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Popular / Best sellers */}
