@@ -59,6 +59,19 @@ because the home page is rendered on the server.
 After deploying, check `/`, `/top-up`, and `/api/health`, and confirm the deploy
 summary includes server functions and routing rules.
 
+## Atlos configuration
+
+Set the Atlos Merchant ID in Admin Settings and save it to the configured
+database. Atlos then appears automatically in the payment methods list. Checkout,
+payment-method visibility, and webhook verification share the same settings
+resolver. Environment variables `ATLOS_MERCHANT_ID` (or the legacy
+`NEXT_PUBLIC_ATLOS_MERCHANT_ID`) and `ATLOS_API_SECRET` take precedence over their
+saved admin settings. Admin configuration does not require redeployment; changes
+use the existing settings cache invalidation when saved.
+
+Run `node --import tsx --test lib/atlos-config.test.ts` to check configuration
+fallbacks, environment precedence, and changes to saved merchant settings.
+
 ## Project Structure
 
 - `app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).

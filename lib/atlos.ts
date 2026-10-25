@@ -1,60 +1,33 @@
 import 'server-only'
 import crypto from 'node:crypto'
-import fs from 'node:fs'
-import path from 'node:path'
+import { getSettings } from '@/lib/settings'
+import { resolveAtlosCredentials, type AtlosCredentials } from '@/lib/atlos-config'
 import { db } from '@/db'
 import { orders, type Order } from '@/db/schemas'
 import { eq } from 'drizzle-orm'
 import type { PublicPaymentMethod } from '@/lib/types'
 
 // Atlos.io crypto payment gateway (https://atlos.io).
-// Requires ATLOS_MERCHANT_ID (or NEXT_PUBLIC_ATLOS_MERCHANT_ID) and optional ATLOS_API_SECRET.
+// Uses environment configuration first, then saved admin settings.
 
 export const ATLOS_KEY = 'ATLOS'
 
-export interface AtlosCredentials {
-  merchantId?: string
-  apiSecret?: string
+export async function getAtlosCredentials(): Promise<AtlosCredentials> {
+  return resolveAtlosCredentials(process.env, getSettings)
 }
 
-export function getAtlosCredentials(): AtlosCredentials {
-  let merchantId =
-    process.env.ATLOS_MERCHANT_ID?.trim() ||
-    process.env.NEXT_PUBLIC_ATLOS_MERCHANT_ID?.trim()
-  let apiSecret = process.env.ATLOS_API_SECRET?.trim()
-
-  if (!merchantId) {
-    try {
-      const envPath = path.join(process.cwd(), '.env')
-      if (fs.existsSync(envPath)) {
-        const content = fs.readFileSync(envPath, 'utf-8')
-        const mMatch = content.match(/^ATLOS_MERCHANT_ID=(.+)$/m) || content.match(/^NEXT_PUBLIC_ATLOS_MERCHANT_ID=(.+)$/m)
-        const sMatch = content.match(/^ATLOS_API_SECRET=(.+)$/m)
-        if (mMatch) merchantId = mMatch[1].trim()
-        if (sMatch) apiSecret = sMatch[1].trim()
-        if (merchantId) process.env.ATLOS_MERCHANT_ID = merchantId
-        if (apiSecret) process.env.ATLOS_API_SECRET = apiSecret
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  return { merchantId, apiSecret }
-}
-
-export function isAtlosConfigured(): boolean {
-  const { merchantId } = getAtlosCredentials()
+export async function isAtlosConfigured(): Promise<boolean> {
+  const { merchantId } = await getAtlosCredentials()
   return Boolean(merchantId)
 }
 
-// Verify Atlos webhook signature if ATLOS_API_SECRET is configured
-export function verifyAtlosWebhook(
+// Verify the webhook signature using the same resolved settings as checkout.
+export async function verifyAtlosWebhook(
   rawBody: string,
   signatureHeader?: string | null,
   timestampHeader?: string | null,
-): boolean {
-  const { apiSecret } = getAtlosCredentials()
+): Promise<boolean> {
+  const { apiSecret } = await getAtlosCredentials()
   if (!apiSecret) {
     // If no secret configured, accept webhook
     return true
@@ -106,8 +79,8 @@ export async function markAtlosOrderPaid(orderNumber: string, txId?: string): Pr
 }
 
 // Add Atlos to the store's payment methods when configured
-export function withAtlos(methods: PublicPaymentMethod[]): PublicPaymentMethod[] {
-  if (!isAtlosConfigured() || methods.some((m) => m.key === ATLOS_KEY)) return methods
+export async function withAtlos(methods: PublicPaymentMethod[]): Promise<PublicPaymentMethod[]> {
+  if (!(await isAtlosConfigured()) || methods.some((m) => m.key === ATLOS_KEY)) return methods
   return [
     {
       id: 0,
